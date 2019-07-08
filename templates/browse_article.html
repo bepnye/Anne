@@ -30,18 +30,15 @@
         addTabContent(div, title, content);
       });
       // add functions to the buttons
-      $("#add-but-i").click(() => { addFromHighlight('i'); });
-      $("#add-but-c").click(() => { addFromHighlight('c'); });
-      $("#add-but-o").click(() => { addFromHighlight('o'); });
-      $("#remove-but-i").click(() => { clear('i'); });
-      $("#remove-but-c").click(() => { clear('c'); });
-      $("#remove-but-o").click(() => { clear('o'); });
-      $("#submit-but").click(submit);
-      document.onmouseup = addButtonAvail; // call this function whenever the person lifts up his or her mouse
-      document.onkeyup = addHighlightedKeyup;
 
       tablinks = document.getElementsByClassName("tablinks"); // get all the tab headers
       tablinks[0].click();
+
+      var spans = {{ spans|tojson }};
+      console.log(spans);
+      $.each(spans['interventions'], function(n, s) { addFromTextOffsets(s['i'], s['f'], s['text'], 'i'); });
+      $.each(spans['participants'], function(n, s) { addFromTextOffsets(s['i'], s['f'], s['text'], 'p'); });
+      $.each(spans['outcomes'], function(n, s) { addFromTextOffsets(s['i'], s['f'], s['text'], 'o'); });
     });
   </script>
 
@@ -50,7 +47,7 @@
 
   <!-- Initialize the tab with titles . -->
   <div style = "margin-bottom:10px;">
-    <div class = "tab">
+    <div id="tab-buttons-div" class = "tab">
       {% for tab in tabs %}
         <button id = 'link_{{ tab[0] }}' class="tablinks" onclick="openTab(event, '{{ tab[0] }}')">{{ tab[0] }}</button>
       {% endfor %}
@@ -59,8 +56,8 @@
 
     <!-- Create a place to put content for each tab. -->
     {%for tab in tabs %}
-    <div id = '{{ tab[0] }}', class="tabcontent" style = "height: 300px; overflow: auto;">
-    </div>
+      <div id = '{{ tab[0] }}', class="tabcontent" style = "height: 300px; overflow: auto;">
+      </div>
     {% endfor %}
   </div>
 
@@ -71,7 +68,7 @@
     -->
     <div class = "container-fluid" style = "margin-left: 15px; margin-top: 5px;">
       <div class = "row" style = "text-align: center; margin-top: 10px; margin-bottom: 10px;">
-        Find all text spans that match the intervention (<b><i>{{ intervention }}</i></b>), comparator (<b><i>{{ comparator }}</i></b>), and outcome (<b><i>{{ outcome }}</i></b>).
+        Text spans generate by best model from <a href="http://pico-extraction.ebm-nlp.com/" target="_blank">EBM-NLP</a>
       </div>
     </div>
 
@@ -84,11 +81,23 @@
           <!-- Panel heading (aka title) -->
           <div class="panel-heading">
             <div>
-              <label> Spans matching <b><i>{{ intervention }}</i></b> </label>
+              <label><b>Participants</b></label>
             </div>
-            <div style="height: 35px">
-              <button type="button" id= "remove-but-i" class="btn btn-default" style = "float: right; margin-left: 5px;" disabled> Clear Span </button>
-              <button type="button" id= "add-but-i" class="btn btn-default add-but" style = "float: right;" disabled> Add Span </button>
+          </div>
+
+          <!-- Scrollable window where selected-text is displayed -->
+          <div class="panel-body" id="panel-i" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
+              <div id="selected-p" class="selected-spans"> </div>
+          </div>
+        </div>
+      </div>
+
+      <div class = "col-md-4">
+        <div class="panel panel-default">
+          <!-- Panel heading (aka title) -->
+          <div class="panel-heading">
+            <div>
+              <label><b>Interventions</b></label>
             </div>
           </div>
 
@@ -104,31 +113,7 @@
           <!-- Panel heading (aka title) -->
           <div class="panel-heading">
             <div>
-              <label> Spans matching <b><i>{{ comparator }}</i></b> </label>
-            </div>
-            <div style="height: 35px">
-              <button type="button" id= "remove-but-c" class="btn btn-default" style = "float: right; margin-left: 5px;" disabled> Clear Span </button>
-              <button type="button" id= "add-but-c" class="btn btn-default add-but" style = "float: right;" disabled> Add Span </button>
-            </div>
-          </div>
-
-          <!-- Scrollable window where selected-text is displayed -->
-          <div class="panel-body" id="panel-c" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
-              <div id="selected-c" class="selected-spans"> </div>
-          </div>
-        </div>
-      </div>
-
-      <div class = "col-md-4">
-        <div class="panel panel-default">
-          <!-- Panel heading (aka title) -->
-          <div class="panel-heading">
-            <div>
-              <label> Spans matching <b><i>{{ outcome }}</i></b> </label>
-            </div>
-            <div style="height: 35px">
-              <button type="button" id= "remove-but-o" class="btn btn-default" style = "float: right; margin-left: 5px;" disabled> Clear Span </button>
-              <button type="button" id= "add-but-o" class="btn btn-default add-but" style = "float: right;" disabled> Add Span </button>
+              <label><b>Outcomes</b></label>
             </div>
           </div>
 
@@ -142,14 +127,23 @@
     </div>
 
     <div class="row">
-      <div class = "col-md-3"></div>
-      <div class = "col-md-6">
-        <!-- Green submit button that has a width to line up with the above drop down menu -->
-        <button type="button" id= "submit-but" style="width: 100%;" class="btn btn-success" disabled>
-          Submit
-        </button>
+      <div class = "col-md-1"></div>
+      <div class = "col-md-10">
+        <div class="panel panel-default">
+          <!-- Panel heading (aka title) -->
+          <div class="panel-heading">
+            <div>
+              <label><b>Evidence</b></label>
+            </div>
+          </div>
+
+          <!-- Scrollable window where selected-text is displayed -->
+          <div class="panel-body" id="panel-ev" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
+              <div id="selected-ev" class="selected-spans"> </div>
+          </div>
+        </div>
       </div>
-      <div class = "col-md-3"></div>
+      <div class = "col-md-1"></div>
     </div>
 
 

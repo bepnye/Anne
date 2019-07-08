@@ -193,11 +193,25 @@ class XMLReader(Reader):
     @param body represents the whole article.
     """
     def _get_sections(self, body):
+      section_title = ''
+      section_content = []
+      for node in body.getchildren():
+        if node.tag == 'sec':
+          section_content.append(self._get_sections(node))
+        elif node.tag == 'title':
+          if node.text:
+            section_title = node.text
+          elif len(node) == 1:
+            section_title = node[0].text
+        else:
+          section_content.append(ET.tostring(node).decode())
+      return [section_title, section_content]
+    """
         arr = []
         title = ""
         paragraph = ""
         children = body.getchildren()
-        for i in range(len(children)):
+        for i, child in enumerate(children):
             child = children[i]
             if (child.tag == 'sec'):
                 sub_sec = self._get_sections(child)
@@ -213,6 +227,7 @@ class XMLReader(Reader):
             return [title, arr]
         else:
             return [title, paragraph]
+    """
          
     
     """
@@ -224,69 +239,49 @@ class XMLReader(Reader):
         text = ET.tostring(body).decode('utf-8')
         return text
 
-        
+    def _get_abstract(self, article_meta):
+        abst_xml = article_meta.find('abstract')
+        abst_info = self._get_sections(abst_xml)
+        abst_info[0] = 'Abstract' # title
+        return abst_info
+
+    def _get_body(self, body):
+        body_sections = self._get_sections(body)
+        # We don't need the title for the top "body" node
+        return body_sections[1]
+
     """
     Initialize the article to have the proper fields and extra information.
     """
     def _init_article_(self, next_file, article_meta, body):
         id_ = self._get_ids(article_meta)
         title = self._get_title(article_meta)   
-        try:
-            temp = article_meta.find('abstract')
-            if (temp is None):
-                abstract = []
-            else:   
-                abstract_sections = self._get_sections(temp)
-                abstract = []        
-                for part in abstract_sections:
-                    abstract.append([part[0], part[1]])
-        except:
-            lop = article_meta.find('abstract').findall('p')
-            abstract = reduce((lambda x, y: ''.join([x, ET.tostring(y).decode('utf-8')])), lop, "")        
-            if abstract == '':
-                abstract = ET.tostring(article_meta.find('abstract')).decode('utf-8')
-            
-                   
-        if not(body is None):
-            text = self._get_sections(body) #self._get_full_text(body)
-            text.insert(0, ['Abstract', abstract])
-        else:
-            text = [['Abstract', abstract]]
-            
+
+        abstract = self._get_abstract(article_meta)
+        body = self._get_body(body)
+
+        text = [abstract] + body
+
         # store the path of this file
         art = article.Article(id_= id_, title=title, text=text)
         art.get_extra()['path'] = next_file
                 
-        file_data = self.file_description[str(id_)]
+        file_data = self.file_description.get(str(id_), [])
         sp_file_data = None
         for row in file_data:
-            if (int(row['Unnamed: 0']) == int(next_file)):
+            if (str(row['Unnamed: 0']) == str(next_file)):
                 sp_file_data = row
          
         try:
-            art.get_extra()['outcome'] = sp_file_data['Outcome'].encode('cp1252').decode('utf-8')
-        except:
             art.get_extra()['outcome'] = sp_file_data['Outcome']
-        
-        try:
-            art.get_extra()['comparator'] = sp_file_data['Comparator'].encode('cp1252').decode('utf-8')
-        except:
             art.get_extra()['comparator'] = sp_file_data['Comparator']
-            
-        try: 
-            art.get_extra()['intervention'] = sp_file_data['Intervention'].encode('cp1252').decode('utf-8')
-        except:
             art.get_extra()['intervention'] = sp_file_data['Intervention']
+        except:
+            art.get_extra()['outcome'] = 'unk_outcome'
+            art.get_extra()['comparator'] = 'unk_comparator'
+            art.get_extra()['intervention'] = 'unk_intervention'
             
             
-        text.insert(1, ["Title", [['Article Title', title], 
-                                  ['PMC id', sp_file_data['XML']]]])
-        
-        # only get the abstract if the next_file is None or it doesn't exist
-        if (not(abstract is None) and not(next_file is None)):
-            art.get_extra()['abstract'] = abstract # add the abstract in
-            
-        
         return art
     
     """
@@ -295,13 +290,13 @@ class XMLReader(Reader):
     Otherwise, it will only display the abstract.
     """
     def get_next_article(self, user, next_file=None):
-        next_file = next_file or self._get_next_file(user)
+        next_file = next_file or glob.glob('{}/*.html'.format(self.path))[0]
 
         if not next_file:
             return None
             
-        pmc = self.by_row_description[int(next_file)][0]['XML']
-        path_to_file =  self.path + '//PMC' + str(pmc).strip() + '.nxml' # the path to XML files
+        path_to_file =  self.path + '/' + str(next_file) + '.html' # the path to XML files
+        print('Parsing:', path_to_file)
         et = ET.parse(path_to_file) 
         root = et.getroot() 
         

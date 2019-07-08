@@ -59,24 +59,15 @@ body {font-family: Arial;}
     <div class = "tab">
       <!-- Split the tabs between can view and cannot view -->
       {% for tab in tabs %}
-        {% if tab[0] == 'Abstract' or tab[0] == 'Title'%}
-          <button id = 'link_{{ tab[0] }}' class="tablinks available" onmouseenter="hover_over(this)" onmouseleave="hover_away(this)"
-          onclick="openTab(event, '{{ tab[0] }}')">{{ tab[0] }}</button>
-        {% endif %}
-
-        <!-- You can view these tabs -->
-        {% if tab[0] != 'Abstract' and tab[0] != 'Title'%}
-          <button id = 'link_{{ tab[0] }}' style = "background-color:	#BEBEBE;" title="You must select 'Cannot tell based on abstract' to view additional tabs."
-           class="tablinks" disabled>{{ tab[0] }}</button>
-        {% endif %}
-
+        <button id = 'link_{{ tab[0] }}' class="tablinks available" onmouseenter="hover_over(this)" onmouseleave="hover_away(this)"
+        onclick="openTab(event, '{{ tab[0] }}')">{{ tab[0] }}</button>
       {% endfor %}
 
     </div>
 
     <!-- Create a place to put content for each tab. -->
     {%for tab in tabs %}
-    <div id = '{{ tab[0] }}', class="tabcontent" style = "max-height: 300px; overflow: auto;">
+    <div id = '{{ tab[0] }}', class="tabcontent" style = "height: 300px; overflow: auto;">
     </div>
     {% endfor %}
   </div>
@@ -238,14 +229,14 @@ body {font-family: Arial;}
       <div class="panel panel-default">
         <!-- Panel heading (aka title) -->
         <div class="panel-heading">
-          <label> Support for Decision </label>
-          <button type="button" id= "add-but" class="btn btn-default" style = "margin-left: 195px;" disabled> Add Text </button>
+          <label> Support </label>
+          <button type="button" id= "add-but" class="btn btn-default" style = "margin-left: 195px;" disabled> Add Span </button>
           <button type="button" id= "restart-but" class="btn btn-default" style = "margin-left: 5px;" disabled> Clear </button>
         </div>
 
         <!-- Scrollable window where selected-text is displayed -->
         <div class="panel-body" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
-            <o1 id="selected"> </o1>
+            <div id="selected"> </div>
         </div>
       </div>
     </div>

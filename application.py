@@ -8,12 +8,16 @@ import reader
 import writer
 import numpy as np
 
+import model_utils
+
 application = flask.Flask(__name__)
 
 anne = annotator.Annotator(reader.get_reader(config.reader)(**config.reader_params),
                            writer.get_writer(config.writer)(**config.writer_params))
 
 valid_users = np.loadtxt('usernames.txt', delimiter = ',', dtype = 'str')
+model_annotations = json.load(open('data/model_annotations.json'))
+embeddings = json.load(open('data/embeddings.json'))
 
 """
 Display the main page.
@@ -35,7 +39,7 @@ def start():
     if not id_:
         return flask.redirect(flask.url_for('finish'))
     else:
-        return flask.redirect(flask.url_for('annotate_abstract', 
+        return flask.redirect(flask.url_for('annotate_full', 
                                             userid = userid, 
                                             id_ = id_))
                 
@@ -75,7 +79,7 @@ def annotate_abstract(userid, id_ = None):
                                      userid = userid,
                                      id = art.id_,
                                      pid = id_,
-                                     tabs = art.text,
+                                     tabs = json.dumps(art.text),
                                      xml_file = art.get_extra()['path'],
                                      outcome = art.get_extra()['outcome'],
                                      intervention = art.get_extra()['intervention'],
@@ -108,8 +112,56 @@ def annotate_full(userid, id_ = None):
                                      intervention = art.get_extra()['intervention'],
                                      comparator = art.get_extra()['comparator'],
                                      options = config.options_full)
-                                 
 
+"""
+Grabs a specified article and displays the full text.
+"""                             
+@application.route('/browse/<userid>/<id_>/', methods=['GET'])
+def browse(userid, id_ = None):
+    try:
+        if id_ is None:
+            art = anne.get_next_article(userid)
+        else:
+            art = anne.get_next_article(userid, id_)
+    except:
+        return annotate_abstract(userid, id_)
+    
+    if not art:
+        return flask.redirect(flask.url_for('finish'))
+    else:
+        annos = model_annotations['docs'][id_]
+        return flask.render_template('browse_article.html',
+                                     userid = userid,
+                                     id = art.id_,
+                                     pid = id_,
+                                     tabs = art.text,
+                                     spans = annos,
+                                     xml_file = get_last_path(userid),
+                                     options = config.options_full)
+
+@application.route('/evidence_map/trial_sizes/', methods=['GET'])
+def trial_sizes():
+  cluster_docs = { c: [] for c in i_clusters }
+  for doc in model_annotations['docs'].values():
+    doc_spans = set(i['text'] for i in doc['interventions'])
+    for c, cluster_spans in i_clusters.items():
+      if len(doc_spans & cluster_spans):
+        cluster_docs[c].append(doc)
+
+  return flask.render_template('trial_sizes.html',
+      i_clusters = { k: list(v) for k,v in i_clusters.items() },
+      docs = cluster_docs)
+
+@application.route('/clusters/', methods=['GET'])
+def clusters():
+  return flask.render_template('clusters.html',
+      clusters = model_utils.get_d3_dendro(embeddings))
+
+@application.route('/evidence_map/head_to_head/', methods=['GET'])
+def head_to_head():
+  return flask.render_template('trial_sizes.html',
+      trial_groups = trial_groups)
+                                 
 """
 Submits the article id with all annotations.
 """

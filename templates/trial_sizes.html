@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <head>
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/main.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/trial_sizes.css') }}">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='scripts/post.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/article.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/trial_sizes.js') }}"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  </head>
+
+  <script>
+    $(document).ready( function() {
+      var clusters = {{ i_clusters|tojson }};
+      var docs = {{ docs|tojson }};
+			generateBars(docs);
+    });
+  </script>
+</head>
+<body>
+  {% for cluster in i_clusters %}
+    <div id="cluster-{{ cluster }}"></div>
+  {% endfor %}
+</body>
