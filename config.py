@@ -4,7 +4,7 @@
 # Options: csv, sql, xml
 reader = 'xml'
 reader_params = {
-    'path': './/..//path_my_xml_files'
+    'path': '/Users/elizabethwagoner/Desktop/ben/Anne/parsed_nxmls/'
 }
 
 # The writer to use, along with the paramaters that

@@ -2,6 +2,155 @@
 
 globalId = 0;
 
+_curE = null;
+_curGroup = null;
+
+function bindEvents() {
+  $("#add-group").click(() => { addGroup(); });
+  $("#del-group").click(() => { delGroup(); });
+  $("#add-span").click(() => { addSpan(); });
+  $("#del-span").click(() => { removeSpan(); });
+
+  $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+    var tabIdChunks = e.target.id.split('-');
+    var navId = e.target.parentNode.id;
+    $('input[name="spans"]').attr('checked', false);
+
+    // Toggle the primary ICO tabs
+    if (navId == 'nav-tabs-ico') {
+      _curE = tabIdChunks[tabIdChunks.length - 1];
+
+      // _curGroup doesn't get updated, so look for the active tab manually
+      var activeTabs = $('#nav-tabs-'+_curE+' a.active');
+      if (activeTabs.length == 1) {
+        var activeIdChunks = activeTabs[0].id.split('-');
+        _curGroup = activeIdChunks[activeIdChunks.length - 1];
+      } else {
+        _curGroup = null;
+      }
+
+    // Toggle the group tab
+    } else if (navId == 'nav-tabs-i' ||
+               navId == 'nav-tabs-c' ||
+               navId == 'nav-tabs-o') {
+      $('input[name=spans]').attr('checked',false);
+      _curGroup = tabIdChunks[tabIdChunks.length - 1];
+    }
+  })
+
+	$(document).on('change', 'input[type=radio][name=spans]', e => radioChange(e));
+  $(document).on('click', '.highlight', e => highlightClick(e));
+  
+  $("#submit").click(submit);
+  document.onmouseup = addButtonAvail; // call this function whenever the person lifts up his or her mouse
+  document.onkeyup = handleKeyPress;
+  console.log('good to go!');
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function setArticleHeight() {
+  var headerHeight = document.getElementById('nav-tabs-article').clientHeight;
+  var footerHeight = document.getElementById('annotation-container').clientHeight;
+  var articleHeight = window.innerHeight - headerHeight - footerHeight - 10 - 12;
+  document.getElementById('tab-contents-article').style.height = articleHeight + 'px';
+}
+
+function sanitizeStr(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(' ', '-');
+}
+
+function setTabIndices() {
+  var groupTabs = Array.from(document.getElementById('nav-tabs-'+_curE).children);
+  $.each(groupTabs, function (nTab, tab) {
+    var key = nTab+1;
+    tab.setAttribute('tab-index', key);
+    if (key <= 9) {
+      tab.innerHTML = '<span class="hotkey">'+key+'</span> '+tab.getAttribute('group-name');
+    }
+    else {
+      tab.innerHTML = tab.getAttribute('group-name');
+    }
+  });
+}
+
+function delGroup() {
+  var groupTab = document.getElementById('nav-tab-'+_curE+'-'+_curGroup);
+  var groupDiv = document.getElementById(_curE+'-'+_curGroup);
+  var spanContainer = groupDiv.firstChild;
+  var nSpans = spanContainer.childNodes.length;
+  console.log(nSpans);
+  if (nSpans > 0) {
+    alert('Cannot delete non-empty group.');
+    return
+  }
+  var curTabIdx = parseInt(groupTab.getAttribute('tab-index'));
+  groupDiv.parentNode.removeChild(groupDiv);
+  groupTab.parentNode.removeChild(groupTab);
+  showGroup(_curE, curTabIdx-1);
+  setTabIndices();
+  setArticleHeight();
+}
+
+function createGroup(groupName) {
+  console.log('adding for', e);
+
+  if (groupName == null) {
+    groupName = prompt("Enter group name:", "...");
+    if (groupName == null) {
+      return;
+    }
+  }
+
+  var e = _curE;
+
+  var navTabs = document.getElementById('nav-tabs-'+e);
+  var tabContents = document.getElementById('tab-contents-'+e);
+
+  var tabIdx = navTabs.children.length + 1; // 1-based index
+
+  var groupIdx = getNewGlobalId();
+  var groupId = e + '-' + groupIdx;
+
+  var newTab = document.createElement('a');
+  newTab.classList.add('nav-item', 'nav-link', 'nav-inner');
+  newTab.id = 'nav-tab-'+groupId;
+  newTab.setAttribute('data-toggle', 'tab');
+  newTab.setAttribute('href', '#'+groupId);
+  newTab.setAttribute('group-name', groupName);
+  newTab.setAttribute('element', e);
+
+  var newContent = document.createElement('div');
+  newContent.classList.add('tab-pane', 'fade');
+  newContent.id = groupId;
+  newContent.setAttribute('role', 'tabpanel');
+
+  var spanContainer = document.createElement('div');
+  spanContainer.classList.add('selected-spans');
+  spanContainer.id = groupId + '-selected';
+
+  newContent.appendChild(spanContainer);
+  navTabs.appendChild(newTab);
+  tabContents.appendChild(newContent);
+
+  setTabIndices();
+  console.log(e, tabIdx);
+
+  showGroup(e, tabIdx);
+  setArticleHeight();
+}
+
+function showAnnTab(e) {
+  $('#nav-tab-'+e).tab('show')
+}
+
+function showGroup(e, idx) {
+  showAnnTab(e);
+  $(document.querySelector('[tab-index="'+idx+'"][element="'+e+'"]')).tab('show')
+}
+
 /* copied verbatim from https://stackoverflow.com/questions/3960843/ */
 function getCommonAncestor(a, b)
 {
@@ -68,23 +217,32 @@ function getInterveningNodes(startNode, endNode) {
     return rangeNodes;
 }
 
-function createTextWrapper(className = null, id = null) {
-  var wrapper = document.createElement('offsets');
-  if (className) { wrapper.className = className; }
-  if (id) { wrapper.id = id; }
+function createHighlight(suffix, spanId) {
+  var wrapper = document.createElement('span');
+  wrapper.classList.add('highlight', 'highlight-'+suffix);
+  // add the id as a class for easy jQuery selections
+  // and as an attribute for easy js lookups
+  wrapper.classList.add('span-'+spanId);
+  wrapper.setAttribute('span-id', spanId);
   return wrapper;
 }
 
-function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, createClassWrapper) {
+function createOffset(text, i, f) {
+  var node = document.createElement('offsets');
+  node.setAttribute('xml_i', i);
+  node.setAttribute('xml_f', f);
+  node.textContent = text;
+  return node;
+}
+
+function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, suffix, spanId) {
   var textNodes = selectedNodes.filter(n => n.nodeType == Node.TEXT_NODE);
-  console.log(textNodes);
-  console.log(selectedTxtI);
-  console.log(selectedTxtF);
 	$.each(textNodes, function (n, node) {
     var offsetNode = node.parentNode;
     var offsetNodeContainer = offsetNode.parentNode;
-    var spanTxtI = parseInt(offsetNode.getAttribute('txt_i'));
-    var spanTxtF = parseInt(offsetNode.getAttribute('txt_f'));
+    var spanTxtI = parseInt(offsetNode.getAttribute('xml_i'));
+    var spanTxtF = parseInt(offsetNode.getAttribute('xml_f'));
+
     if (spanTxtI + node.textContent.length != spanTxtF) {
       console.log('We got a problem! Text length mismatches');
     }
@@ -92,24 +250,29 @@ function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, createClassWra
     var spanContentI = Math.max(selectedTxtI, spanTxtI) - spanTxtI;
     var spanContentF = Math.min(selectedTxtF, spanTxtF) - spanTxtI;
 
-    var chunks = [[createTextWrapper,  0, spanContentI],
-                  [createClassWrapper, spanContentI, spanContentF],
-                  [createTextWrapper,  spanContentF, node.textContent.length]];
+    var chunks = [[0, spanContentI],
+                  [spanContentI, spanContentF],
+                  [spanContentF, node.textContent.length]];
 
     var chunkNode = null;
-    $.each(chunks, function (_, [createWrapper, chunkI, chunkF]) {
-      var chunkText = node.textContent.substring(chunkI, chunkF);
-      if (chunkText.length > 0 ) {
-        chunkNode = createWrapper.call();
-        chunkNode.textContent = chunkText;
-        chunkNode.setAttribute('txt_i', selectedTxtI + chunkI);
-        chunkNode.setAttribute('txt_f', selectedTxtI + chunkF);
-        offsetNodeContainer.insertBefore(chunkNode, offsetNode);
+    $.each(chunks, function (nChunk, [chunkI, chunkF]) {
+      if (chunkF > chunkI) {
+        var chunkText = node.textContent.substring(chunkI, chunkF);
+        var txt_i = spanTxtI + chunkI;
+        var txt_f = spanTxtI + chunkF;
+        chunkNode = createOffset(chunkText, txt_i, txt_f);
+        if (nChunk == 1) { // highlighted section
+          var highlight = createHighlight(suffix, spanId);
+          highlight.appendChild(chunkNode);
+          textNodes[n] = chunkNode;
+          offsetNodeContainer.insertBefore(highlight, offsetNode);
+        } else {
+          offsetNodeContainer.insertBefore(chunkNode, offsetNode);
+        }
       }
     });
     node.remove(); // the TEXT_NODE that we split to create 3 new offset nodes
     offsetNode.remove(); // the offset node that held the original TEXT_NODE
-    textNodes[n] = chunkNode.childNodes[0]; // the TEXT_NODE from one of the new offset nodes
 	});
   return textNodes;
 }
@@ -148,50 +311,44 @@ function isAlreadyHighlighted(highlighted) {
     return false;
 }
 
-function checkRadioBtn(name, idx) {
-  var radios = document.getElementsByClassName(name);
-  if (idx < 0) {
-    idx = radios.length - 1;
-  }
-  if (radios.length > 0) {
-    radios[idx].checked = true;
-  }
-}
-
 function checkSpanOffset(node, targetOffset) {
-  var text_i = parseInt(node.getAttribute('txt_i'));
-  var text_f = parseInt(node.getAttribute('txt_f'));
+  var text_i = parseInt(node.getAttribute('xml_i'));
+  var text_f = parseInt(node.getAttribute('xml_f'));
   if (text_i <= targetOffset && targetOffset <= text_f) {
-    return node.childNodes[0];
+    return node;
+  } else {
+    return null;
   }
 }
 
-function addFromTextOffsets(textStartOffset, textEndOffset, text, suffix) {
+function addFromOffsets(startOffset, endOffset, text, suffix) {
   var startNode = null;
   var endNode = null;
   $.each(document.getElementsByTagName('offsets'), function(n, node) {
-    var selectedTextNode;
-    if (selectedTextNode = checkSpanOffset(node, textStartOffset)) {
-      startNode = selectedTextNode;
+    var selectedNode;
+    if (selectedNode = checkSpanOffset(node, startOffset)) {
+      startNode = selectedNode;
     }
-    if (selectedTextNode = checkSpanOffset(node, textEndOffset)) {
-      endNode = selectedTextNode;
+    if (selectedNode = checkSpanOffset(node, endOffset)) {
+      endNode = selectedNode;
     }
     if (startNode && endNode) {
       return false;
     }
   });
   if (startNode && endNode) {
+    // descend from the <offset> nodes in to the corresponding <text> nodes
+    startNode = startNode.firstChild;
+    endNode = endNode.firstChild;
     var selectedNodes = getInterveningNodes(startNode, endNode);
-    add(selectedNodes, textStartOffset, textEndOffset, text, suffix);
+    add(selectedNodes, startOffset, endOffset, text, suffix);
   } else {
     console.log('Unable to find start/end nodes to highlight text');
     console.log(textStartOffset, textEndOffset);
   }
 };
 
-function addFromHighlight(suffix) {
-  console.log('Adding for', suffix);
+function addFromHighlight() {
   var [highlighted, range] = get_Highlight_Text_And_Range();
   window.getSelection().removeAllRanges();
 
@@ -199,12 +356,28 @@ function addFromHighlight(suffix) {
     return ;
   }
 
+  if (!_curE || !_curGroup) {
+    alert('Create a group first');
+    return;
+  }
+
   if (isAlreadyHighlighted(highlighted) === true) {
       $("#warning").append("<p>Text has already been selected.</p>")
       return;
   }
+
   var selectedNodes = getInterveningNodes(range.startContainer, range.endContainer);
-  add(selectedNodes, range.startOffset, range.endOffset, highlighted, suffix);
+  var textNodes = selectedNodes.filter(n => n.nodeType == Node.TEXT_NODE);
+
+  var startNode = textNodes[0];
+  var startSpanOffset = parseInt(startNode.parentNode.getAttribute('xml_i'));
+  var startOffset = range.startOffset + startSpanOffset;
+
+  var endNode = textNodes[textNodes.length - 1];
+  var endSpanOffset = parseInt(endNode.parentNode.getAttribute('xml_i'));
+  var endOffset = range.endOffset + endSpanOffset;
+
+  add(selectedNodes, startOffset, endOffset, highlighted, _curE);
 }
 
 function getNewGlobalId() {
@@ -213,7 +386,7 @@ function getNewGlobalId() {
 }
 
 function findAncestor (el, cls) {
-  while (el.nodeType == Node.TEXT_NODE || !(el.getAttribute('class') == cls)) {
+  while (el.nodeType == Node.TEXT_NODE || !(el.classList.contains(cls))) {
     el = el.parentNode;
     if (!el) {
       break;
@@ -222,88 +395,159 @@ function findAncestor (el, cls) {
   return el;
 }
 
-function moveToSpan(tab, spanId) {
-  openTab({'currentTarget': document.getElementById('link_'+tab)}, tab);
-  var e = document.getElementById("span-"+spanId);
-  var topPos = e.offsetTop;
-  var tabBarHeight = document.getElementById('tab-buttons-div').offsetHeight;
-  document.getElementById(tab).scrollTop = topPos - tabBarHeight - 50;
+function highlightClick(e) {
+  console.log(e.target);
+  var spanId = e.target.parentNode.getAttribute('span-id');
+  console.log(spanId);
+  if (e.target.parentNode.classList.contains('unassigned')) {
+    $('.highlight.active').removeClass('active');
+    $(e.target.parentNode).addClass('active');
+    uncheckAllRadio();
+  } else {
+    var radioInput = document.getElementById(spanId);
+    showGroup(radioInput.parentNode.getAttribute('element'), radioInput.parentNode.getAttribute('group'));
+    radioInput.click();
+  }
+}
+
+function uncheckAllRadio() {
+  $('input[type=radio]:checked').prop('checked', false);
+}
+
+async function radioChange(e) {
+  var tab = e.target.getAttribute('tab');
+  var spanId = 'span-'+e.target.getAttribute('id');
+  
+  $('.highlight.active').removeClass('active');
+  $('.'+spanId).addClass('active');
+
+  // safe to try and open the tab (noop if tab is already open)
+  openTab(document.getElementById('link_'+tab), tab);
+
+  // check if we need to scroll to span
+  var articleDiv = document.getElementById('tab-contents-article');
+
+  await sleep(300);
+  var span = document.getElementsByClassName(spanId)[0];
+  var divTop = articleDiv.offsetTop;
+  var divBot = divTop + articleDiv.offsetHeight;
+  var spanTop = span.getBoundingClientRect().top;
+  var spanBot = spanTop + span.offsetHeight;
+
+  if (spanTop < divTop) {
+    articleDiv.scrollTop -= (divTop - spanTop) + 5;
+  } else if (spanBot > divBot) {
+    articleDiv.scrollTop += (spanBot - divBot) + 5;
+  }
 }
 
 /**
 * Add the text to the on-going list.
 */
 function add(selectedNodes, startOffset, endOffset, highlighted, suffix) {
-
+  
     var globalId = getNewGlobalId();
 
-    var textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, function () {
-      return createTextWrapper('text-span-'+suffix, 'span-'+globalId);
-    });
+    console.log(selectedNodes);
+    console.log(selectedNodes.map(n => n.parentNode));
+    var labeledNodes = selectedNodes.filter(n => n.parentNode.classList.contains('highlight') || n.parentNode.parentNode.classList.contains('highlight'));
+    if (labeledNodes.length > 0) {
+      alert('Cannot overwrite existing highlight!');
+      return false;
+    }
+
+    textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, suffix, globalId);
 
     var startNode = textNodes[0];
     var endNode = textNodes[textNodes.length - 1];
     
-    var xmlStart = -1;
-    var xmlEnd = -1;
+    var txtStart = -1;
+    var txtEnd = -1;
     try {
-      xmlStart = parseInt(startNode.parentNode.getAttribute('xml_i')) + startOffset;
-      xmlEnd = parseInt(endNode.parentNode.getAttribute('xml_f')) + endOffset;
+      txtStart = parseInt(startNode.getAttribute('xml_i'));
+      txtEnd = parseInt(endNode.getAttribute('xml_f'));
     } catch {
-      console.log('Unable to find xml start/end info in tag attr');
+      console.log('Unable to find txt start/end info in tag attr');
       console.log(selectedNodes);
     }
+    addRadioButton(highlighted, suffix, txtStart, txtEnd, globalId);
+}
+
+function addRadioButton(text, suffix, txtStart, txtEnd, globalId) {
     // store the data in the corresponding box
     var divId = 'radio-'+globalId;
     var radioDiv = document.createElement('div');
-    radioDiv.setAttribute('id', divId);
-    radioDiv.setAttribute('xml_start', xmlStart);
-    radioDiv.setAttribute('xml_end', xmlEnd);
+    radioDiv.id = divId;
+    radioDiv.classList.add('selected-ico', 'selected-'+suffix);
+    radioDiv.setAttribute('xml_start', txtStart);
+    radioDiv.setAttribute('xml_end', txtEnd);
+    radioDiv.setAttribute('element', _curE);
+    radioDiv.setAttribute('group', _curGroup);
 
-    var tab = findAncestor(startNode, 'tabcontent').id;
+    var tab = $('.tab-pane-article.active')[0].id;
     var radioInput = document.createElement('input');
     radioInput.setAttribute('type', 'radio');
     radioInput.setAttribute('tab', tab);
     radioInput.setAttribute('name', 'spans');
     radioInput.setAttribute('value', divId);
-    radioInput.setAttribute('class', 'spans-'+suffix);
     radioInput.setAttribute('id', globalId);
 
     var radioLabel = document.createElement('label');
     radioLabel.setAttribute('for', globalId);
-    radioLabel.setAttribute('onclick', 'moveToSpan("'+tab+'", '+globalId+')');
-    
+
     radioDiv.appendChild(radioInput);
     radioDiv.appendChild(radioLabel);
-    radioLabel.appendChild(document.createTextNode(highlighted));
-    document.getElementById('selected-'+suffix).appendChild(radioDiv);
+    radioLabel.appendChild(document.createTextNode(text));
+    document.getElementById(_curE+'-'+_curGroup+'-selected').appendChild(radioDiv);
 
-    try {
-      // disable the add-text button, and enable the clear button
-      document.getElementById("remove-but-"+suffix).disabled = false;
-      // only enable the submit button if the user has selected a span
-      document.getElementById("submit-but").disabled = false;
-    }
-    catch {
-    }
-
-    checkRadioBtn('spans-'+suffix, -1);
-    $("#panel-"+suffix).scrollTop(function() { return this.scrollHeight; });
-
-    $("#warning").empty();
+    radioInput.click();
 }
 
 function getActiveTab() {
   return document.getElementsByClassName("tablinks active")[0].id;
 }
 
-function addHighlightedKeyup (evt) {
-  if (evt.key == "1") {
-    addFromHighlight('i');
-  } else if (evt.key == "2") {
-    addFromHighlight('c');
-  } else if (evt.key == "3") {
-    addFromHighlight('o');
+function addSpan() {
+  if (window.getSelection().toString()) {
+    addFromHighlight();
+  } else if  ($('.highlight.active').length > 0) {
+    moveSpan();
+  }
+}
+
+function addGroup() {
+  // add new group 
+  var groupName = window.getSelection().toString();
+  if (groupName.length > 0) {
+    createGroup(groupName);
+  }
+  else {
+    createGroup();
+  }
+}
+
+function handleKeyPress (evt) {
+  console.log(evt.key, evt.keyCode);
+  if (evt.key == "t") {
+    showAnnTab('i');
+  }
+  else if (evt.key == "o") {
+    showAnnTab('o');
+  }
+  else if (isFinite(evt.key)) {
+    showGroup(_curE, evt.key)
+  }
+  else if (evt.key == 'a') {
+    addSpan();
+  }
+  else if (evt.key == 'g') {
+    addGroup();
+  }
+  else if (evt.key == 'd') {
+    delGroup();
+  }
+  else if (evt.key == "e" || evt.keyCode == 8 /*backspace*/ || evt.keyCode == 46 /*delete*/) {
+    removeSpan();
   }
 }
 
@@ -341,44 +585,36 @@ function getCheckBoxSelection() {
 * Send the data to the python code.
 */
 function submit() {
-    var userid = document.getElementById("userid").innerHTML;
-    var id = document.getElementById("id").innerHTML;
-    var pid = document.getElementById("pid").innerHTML;
-    var annotations = getFinalText();
-    var selection = getCheckBoxSelection();
-    var outcome = document.getElementById("outcome_save").innerHTML;
-    var comparator = document.getElementById("comparator_save").innerHTML;
-    var intervention = document.getElementById("intervention_save").innerHTML;
-    var xml_file = document.getElementById("xml_file").innerHTML;
+  var userid = document.getElementById("userid").innerHTML;
+  var id = document.getElementById("id").innerHTML;
+  var pid = document.getElementById("pid").innerHTML;
 
-    // Modify the necessary annotations to include the whole table.
-    for (var j = 0; j < annotations.length; j++) {
-      // Determine if this is in a table.
-      var trs = document.getElementsByTagName("tr");
-      var text = annotations[j];
-      for (var i = 0; i < trs.length; i++) {
-        var tr = trs[i];
-        var txt = tr.innerText;
-        // Check if either are a substring of another -> if so, save it.
-        if (txt != "" && (text.indexOf(txt) != -1 || txt.indexOf(text) != -1)) {
-          annotations[j] = tr.innerHTML;
-        }
-      }
-    }
+  var corefs = { 'i': {}, 'o': {} };
+  var groupTabs = Array.from(document.getElementsByClassName('nav-inner'));
+  groupTabs.forEach(tab => {
+    var idParts = tab.id.split('-');
+    var e = idParts[2];
+    var groupId = idParts[3];
+    var groupName = tab.textContent;
+    corefs[e][groupId] = { 'name': groupName, 'spans': [] };
+  });
 
-    if (selection === 'Invalid Prompt') {
-        $("#myModal").modal('show');
-    } else if (annotations.length > 0 || selection === 'Cannot tell based on the abstract') {
-        post("/submit/", {"userid": userid,
-                          "pid": pid,
-                          "id": id,
-                          "annotations": JSON.stringify(annotations),
-                          "selection": selection,
-                          "outcome": outcome,
-                          "comparator": comparator,
-                          "intervention": intervention,
-                          "xml_file": xml_file});
-    }
+  console.log(corefs);
+
+  var spanDivs = Array.from(document.getElementsByClassName('selected-ico'));
+  spanDivs.forEach(s => {
+    console.log(s);
+    var e = s.getAttribute('element');
+    var groupId = s.getAttribute('group');
+    var start = s.getAttribute('xml_start');
+    var end   = s.getAttribute('xml_end');
+    var txt = s.lastChild.textContent;
+    console.log(e, groupId, start, end, txt);
+    corefs[e][groupId].spans.push({'i': start, 'f': end, 'txt': txt});
+  });
+
+  console.log('submitted!', pid);
+  post("/submit/", {"userid": userid, "id": id, "pid": pid, "corefs": JSON.stringify(corefs)});
 }
 
 /**
@@ -425,31 +661,90 @@ function list_change() {
 /**
 * Clear all input and disable the submit button.
 */
-function clear(suffix) {
-    var selection = getCheckBoxSelection();
-    //if (selection !== 'Cannot tell based on the abstract' || selection === 'Invalid prompt') {
-    //  document.getElementById("submit-but").disabled = true;
-    //}
-
-    var radios = document.getElementsByClassName("spans-"+suffix);
-    for (var i = 0; i < radios.length; i++){
-      if (radios[i].checked) {
-        var id = radios[i].value;
-        document.getElementById(id).remove();
-        document.getElementById(id.replace('radio', 'span')).className = 'text-span-normal';
-        break; /* stop early so we remember the index of the removed button */
-      }
+function removeSpan() {
+  var checkedRadios = $('input[type=radio]:checked');
+  if (checkedRadios.length == 1) {
+    var span = checkedRadios[0];
+    var spanId = span.id;
+    if ($('.span-'+spanId)[0].classList.contains('assigned')) {
+      alert('Cannot delete preloaded spans');
+      return;
     }
-    if (radios.length == 0) {
-      document.getElementById("remove-but-"+suffix).disabled = radios.length == 0;
-    } else {
-      checkRadioBtn('spans-'+suffix, i-1);
-    }
-
-    $("#warning").empty();
-    $("#warning").hide();
+    var offsetNodes = $('.span-'+spanId).children();
+    checkedRadios[0].parentNode.remove();
+    offsetNodes.unwrap();
+    condenseOffsetNodes(offsetNodes);
+  }
 }
 
+function moveSpan() {
+  var span0 = document.getElementsByClassName("highlight active")[0];
+  var spanId = span0.getAttribute('span-id');
+  console.log(spanId);
+
+  if (!_curGroup) {
+    alert('No active group to add span to');
+    return;
+  }
+
+  var radioDiv = document.getElementById('radio-'+spanId);
+  if (radioDiv) {
+    var sourceGroup, sourceE, fluff;
+    [sourceE, sourceGroup, ...fluff]= radioDiv.parentNode.id.split('-');
+
+    if (sourceE == _curE && sourceGroup != _curGroup) {
+      var targetParent = document.getElementById(_curE+'-'+_curGroup+'-selected');
+      radioDiv.parentNode.removeChild(radioDiv);
+      targetParent.appendChild(radioDiv);
+    }
+  } else {
+    // No corresponding radio div (initially unassigned span)
+    var suffix = null;
+    if (span0.classList.contains('highlight-i')) {
+      suffix = 'i';
+    } else if (span0.classList.contains('highlight-o')) {
+      suffix = 'o';
+    } else {
+      console.log('Not sure what the element of currently active span is!');
+      return;
+    }
+    if (suffix != _curE) {
+      alert('Wrong group type selected for current span');
+      return;
+    }
+    span0.classList.remove('unassigned');
+    span0.classList.add('assigned');
+    addRadioButton(span0.firstChild.textContent, suffix,
+        span0.firstChild.getAttribute('xml_i'),
+        span0.firstChild.getAttribute('xml_f'),
+        spanId);
+    
+    if ($('.highlight.unassigned').length == 0) {
+      $('#submit').prop('disabled', false);
+    }
+  }
+}
+
+function condenseOffsetNodes(nodes) {
+  Array.from(nodes).forEach(n => {
+    while (n.previousSibling && n.previousSibling.nodeName == 'OFFSETS') {
+      var pn = n.previousSibling;
+      var jn = createOffset(pn.textContent + n.textContent, pn.getAttribute('xml_i'), n.getAttribute('xml_f'));
+      n.parentNode.insertBefore(jn, n);
+      n.remove();
+      pn.remove();
+      n = jn;
+    }
+    while (n.nextSibling && n.nextSibling.nodeName == 'OFFSETS') {
+      var nn = n.nextSibling;
+      var jn = createOffset(n.textContent + nn.textContent, n.getAttribute('xml_i'), nn.getAttribute('xml_f'));
+      n.parentNode.insertBefore(jn, n);
+      n.remove();
+      nn.remove();
+      n = jn;
+    }
+  });
+}
 
 /**
 * Disable the submit button unless they've typed something.
@@ -501,22 +796,13 @@ function addButtonAvail() {
 }
 
 function openTab(evt, name) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(name).style.display = "block";
-    evt.currentTarget.className += " active";
+  $('#'+name.replace('-', '-tab-')).tab('show');
 }
 
 function addTabContent(div, heading, content, level = 0) {
-  div.innerHTML += '<h'+(level+2)+'>' + heading + '</h'+(level+2)+'>';
+  var titleDiv = document.createElement('h'+(level+3));
+  titleDiv.innerHTML = heading.html;
+  div.appendChild(titleDiv);
   $.each(content, function(i, contentNode) {
     /* contentNode is either:
          1) <p>...</p>
@@ -531,3 +817,50 @@ function addTabContent(div, heading, content, level = 0) {
   });
   return;
 };
+
+function addAnns(annotations) {
+  var container = document.getElementById('nav-anns');
+  var divMap = new Map();
+  console.log(annotations);
+  annotations.forEach(a => {
+    var k = a.Intervention + '|' + a.Comparator;
+    var annDiv = null;
+    var targetE = ['Outcome'];
+    if (!divMap.has(k)) {
+      var div = document.createElement('div');
+      div.classList.add('ann-row');
+      container.appendChild(div);
+      divMap.set(k, div);
+      targetE = ['Intervention', 'Comparator', 'Outcome'];
+    }
+    appendAnn(divMap.get(k), a, targetE);
+  });
+}
+
+function appendAnn(div, ann, targetE) {
+  targetE.forEach(e => {
+
+    var eSpan = document.createElement('span');
+    eSpan.innerHTML = '<b>'+e+'</b>: ';
+
+    var globalId = getNewGlobalId();
+    var highlight = document.createElement('span');
+    highlight.classList.add('highlight', 'unassigned', 'span-'+globalId);
+    highlight.setAttribute('span-id', globalId);
+    if (e == 'Outcome') {
+      highlight.classList.add('highlight-o');
+    } else {
+      highlight.classList.add('highlight-i');
+    }
+  
+    var offsets = document.createElement('offsets');
+    offsets.setAttribute('xml_i', ann.Intervention + '|' + ann.Comparator);
+    offsets.setAttribute('xml_f', ann.Outcome);
+    offsets.textContent = ann[e];
+
+    highlight.appendChild(offsets);
+    div.appendChild(eSpan);
+    div.appendChild(highlight);
+    div.innerHTML += '<br/>'
+  });
+}

@@ -1,0 +1,173 @@
+<ABSTRACT>
+Background
+Hydroxymethylglutaryl coenzyme A reductase inhibitors increase new bone formation in vitro and in rodents. Results of epidemiologic analyses evaluating the association between use of these cholesterol-lowering drugs, bone mineral density and fracture have been mixed.
+
+Methods
+Women (n = 24) with osteopenia, assessed by broad band ultrasound attenuation, were randomized to simvastatin 20 mg, 40 mg or identical-appearing placebo for 12 weeks. Fasting lipid profiles and biochemical markers of bone formation (bone-specific alkaline phosphatase) and resorption (N-telopeptides and C-terminal propeptide of type 1 collagen) were measured at baseline, 6 and 12 weeks.
+
+Results
+Plasma low density lipoprotein-cholesterol concentration fell 7%, 39% (p < 0.01 vs baseline) and 47% (p < 0.01 vs baseline) after 12 weeks of treatment with placebo, simvastatin 20 mg and 40 mg, respectively. At baseline, bone marker concentrations were similar in the three treatment groups. At 6 and 12 weeks, bone marker concentrations were not different from baseline, and no significant differences in bone marker concentrations were observed between treatment groups at either 6 or 12 weeks.
+
+Conclusion
+Among osteopenic women, treatment with simvastatin for 12 weeks did not affect markers of bone formation or resorption.
+
+<BODY>
+Background
+Hydroxymethylglutaryl coenzyme A (HMG coA) reductase inhibitors increase new bone formation in vitro and enhance trabecular bone formation in rodents [1]. These effects have been attributed to blockade of the mevalonate pathway upstream from the site of bisphosphonate action, which is thought to be mediated by inhibition of farnesyl pyrophosphate and geranylgeranyl pyrophosphate synthesis [2,3]. Currently available treatments for bone loss do not induce new bone formation; consequently, Mundy's observations excited considerable interest in the potential utility of a class of drugs with proven long term safety for a new purpose, treatment of osteopenia or osteoporosis.
+The initial analysis in humans of the relationship between HMG coA reductase inhibitors and fractures was carried out on the Study of Osteoporotic Fractures and the Fracture Intervention Trial cohorts. In that report Bauer et al. described a nonsignificant reduction in hip (RR 0.30, 95% CI 0.08,1.18) and non-spine fracture (RR 0.83, 95% CI 0.61, 1.15) associated with current HMG coA reductase inhibitor use [4]. A trio of analyses of health-maintenance organization members, New Jersey Medicaid/Pharmacy Assistance/Medicare recipients, and the United Kingdom General Practice Research Database, identified a significantly lower risk of fracture among HMG coA reductase inhibitor users, with odds ratios ranging from 0.48 to 0.55 [5-7]. However, subsequent analyses of the UK General Practice Research Database and Women's Health Initiative Observational Study, found no significant reduction in fracture [8,9] or bone demineralization [10] associated with HMG coA reductase inhibitor use.
+A retrospective study of changes in bone mineral density in Korean men and women with type 2 diabetes mellitus revealed higher bone density in HMG coA reductase inhibitor-users compared with non-users after 14 months of follow up [11].
+Post-hoc analyses from randomized cholesterol-lowering trials have evaluated effects of HMG coA reductase inhibitors on bone markers and fractures. A 12-week randomized trial in non-osteoporotic individuals found no effect of simvastatin or atorvastatin on C-teleopeptide. Bone-specific alkaline phosphatase was reduced 6% (p < 0.001) among patients assigned to simvastatin, but not atorvastatin [12]. A large randomized trial of pravastatin in non-osteoporotic subjects (n = 9014, median age 62 years), identified no reduction in fracture risk [13]. However, pravastatin, in contrast to other HMG coA reductase inhibitors, did not induce bone morphogenetic protein-2 formation in vitro[14], and consequently might not be expected to affect fracture risk.
+This report describes results of a double-blind, placebo-controlled, randomized trial of simvastatin's effects on bone markers in women at high risk for osteoporosis.
+
+Materials and Methods
+Participants
+Eligible women were identified as high risk for osteoporosis by virtue of a T score of -1 to -2.5 measured by broad band ultrasound attenuation (Hologic Sahara). Women could not be taking estrogen, synthetic estrogen receptor modulators, calcitonin, bisphosphonates or HMG coA reductase inhibitors. A negative pregnancy test was required for women of child-bearing potential, and normal serum asparate aminotransferase was required for all subjects. A stable dose of calcium and vitamin D supplementation was permitted. This was a single site trial, conducted at the George Washington University Lipid Research Clinic. Participants provided informed consent in a form approved by the George Washington University Committee on Human Research.
+
+Interventions
+Eligible women were randomly assigned (permuted block) to placebo, simvastatin 20 mg or simvastatin 40 mg taken orally each evening. Fasting plasma samples were collected for lipid profiles at baseline and after 12 weeks on treatment. Two serum samples were collected for bone markers, 1 week apart, prior to initiation of therapy; baseline levels were the average of these two values. On-treatment samples were collected at 6 and 12 weeks. All serum samples were collected at the same time of day to minimize diurnal variation, and stored at -70°C until assayed.
+Simvastatin 20 mg, simvastatin 40 mg and identical-appearing placebo tablets were provided by Merck (West Point, PA). Bone-specific alkaline phosphatase (bone ALP) (Alkphase-B, Metra Biosystems, Mountain View, CA), cross-linked N-telopeptides (NTx-I)(Osteomark NTx Serum, Ostex International, Seattle, WA) and C-terminal propeptide (CTx-I)(Metra Biosystems, Mountain View, CA) of type I collagen were measured by monoclonal immunoassay. Plasma lipids were measured as previously described [15].
+The study objective was to compare the effects of simvastatin and placebo on bone markers. The hypothesis was that simvastatin would reduce bone resorption and induce new bone formation in this study population. Difference in plasma bone marker concentration between treatment groups was the primary outcome.
+
+Randomization
+Allocation sequence was generated by a statistician in the Medical Center Biostatistics Unit; serial envelopes identifying double-blind treatment assignment to drug A, B or C were prepared by a staff member who did not work on this trial. This individual also prepared labeled containers of study pills. The study coordinator, who randomized subjects by opening sequential envelopes, remained blinded to treatment assignment until after laboratory assays were completed, as did the physician investigator. No subjects were unblinded during the trial.
+
+Statistical methods
+The sample size of 8 subjects per treatment group was chosen to be adequate to detect with 95% confidence a 29% reduction in NTx-I, allowing for a dropout rate of 10% in the design. A 40% reduction in NTx-I was considered to be clinically relevant. Changes within treatment groups were assessed by paired t test; differences between treatment groups were assessed by unpaired t test. StatView software (SAS Institute) was used for analyses.
+
+
+Results
+Characteristics of the study population are summarized in Table 1. Twenty-four women, ranging in age from 46 to 76 years, were recruited between February and May, 2001. Age, blood pressure, heart rate, body mass index, creatinine and T score were similar in the three treatment groups. Two women in the simvastatin 20 mg group did not complete the study: one developed intolerable drug side effects and one unexpectedly moved abroad. No on-treatment blood samples were available for either of these women. The remaining 22 women are included in analyses of plasma lipids and bone markers. Among these 22 women, adherence to study medication, assessed by pill count, was 94%.
+Table 1Characteristics of the Study Population
+
+Mean ± SD
+Age, y
+56.1 ± 9.7
+T score
+-1.7+0.1
+Blood pressure, mm Hg
+
+ systolic
+109 ± 6
+ diastolic
+68 ± 3
+Body mass index, kg/m2
+25.6 ± 1.1
+Creatinine, umol/L
+89 ± 2
+Ethnicity, n
+
+ White
+21
+ African-American
+1
+ Asian
+1
+ Unspecified
+1
+Plasma lipids at baseline and on treatment are summarized in Table 2. After 12 weeks, total cholesterol fell 2%, 25% (p < 0.01 vs. baseline) and 26% (p < 0.01 vs baseline) on placebo, simvastatin 20 mg and 40 mg, respectively. Low density lipoprotein (LDL)-cholesterol was reduced by 7%, 39% (p < 0.01 vs. baseline) and 47% (p < 0.01 vs baseline), respectively. No significant changes from baseline to 12 weeks were observed for triglycerides or high density lipoprotein-cholesterol within treatment groups. When treatment groups were compared, total and LDL-cholesterol were significantly lower at 12 weeks in women randomized to simvastatin 40 mg compared with those assigned to placebo (p < 0.01 for both). LDL-cholesterol was also lower among women in the simvastatin 40 mg group compared with the simvastatin 20 mg group (p < 0.05). All subjects' serum asparate aminotransferase levels remained normal at 12 weeks.
+Table 2Plasma lipids
+
+Placebo
+Simvastatin 20 mg
+Simvastatin 40 mg
+
+Baseline
+12 weeks
+Baseline
+12 weeks
+Baseline
+12 weeks
+Total cholesterol, mmol/L
+5.69 ± 0.49
+5.53 ± 0.49
+6.08 ± 0.52
+4.55 ± 0.26
+5.28 ± 0.36
+3.88 ± 0.21a
+Triglycerides, mmol/L
+1.13 ± 0.17
+1.21 ± 0.15
+0.88 ± 0.06
+0.96 ± 0.10
+0.90 ± 0.15
+0.84 ± 0.16
+HDL-cholesterol, mmol/L
+1.60 ± 0.08
+1.78 ± 0.08
+1.60 ± 0.16
+1.63 ± 0.18
+1.76 ± 0.13
+1.84 ± 0.13
+LDL-cholesterol, mmol/L
+3.54 ± 0.47
+3.28 ± 0.39
+4.09 ± 0.57
+2.48 ± 0.36
+3.10 ± 0.34
+1.63 ± 0.13a,b
+Mean ± SE ap < 0.01 vs placebo b p < 0.05 vs simvastatin 20 mg
+Bone marker concentrations are shown in Table 3. At baseline, levels of bone ALP, NTX-I and CTX-I were similar in the 3 treatment groups. At 6 and 12 weeks, bone marker levels remained similar in the 3 treatment groups. Plasma concentrations of the three bone markers at baseline, 6 and 12 weeks are shown (Fig. 1) for the 8 women assigned to simvastatin 40 mg/day. Neither upward or downward trend is apparent for any of the three bone markers.
+Figure 1Bone markers in women randomized to simvastatin 40 mg daily. Plasma concentrations of bone ALP, CTX-I and NTX-I at baseline, and after 6 and 12 weeks of simvastatin 40 mg qhs are shown for each woman assigned to that treatment group.
+Table 3Bone markers
+
+Placebo
+Simvastatin 20
+Simvastatin 40
+
+Baseline
+6 weeks
+12 weeks
+Baseline
+6 weeks
+12 weeks
+Baseline
+6 weeks
+12 weeks
+NTX-I, nM BCE
+15.5 ± 1.8
+15.7 ± 2.0
+15.9 ± 1.4
+16.5 ± 1.7
+15.9 ± 1.2
+19.6 ± 1.8
+19.3 ± 2.4
+17.6 ± 2.1
+18.1 ± 2.0
+CTX-I, ng/ml
+95.4 ± 5.9
+86.4 ± 7.9
+86.9 ± 11.5
+90.3 ± 10.1
+83.2 ± 12.1
+107.2 ± 18.8
+108.2 ± 11.3
+94.2 ± 14.1
+120.7 ± 12.2
+Bone ALP, U/L
+14.3 ± 2.4
+14.0 ± 2.5
+14.4 ± 2.9
+19.0 ± 3.0
+17.4 ± 2.8
+17.2 ± 2.8
+14.3 ± 2.2
+13.4 ± 2.2
+14.0 ± 2.2
+Mean + SE
+
+Discussion
+This randomized, double-blind, placebo-controlled, dose-ranging trial identified no effect of simvastatin on markers of bone formation or resorption at doses which significantly inhibited HMG coA reductase activity. These results confirm and extend those of Chan et al. who found no effect of simvastatin 20 mg on bone ALP or urine NTX-I [16] in hypercholesterolemic Chinese subjects. Strengths of the current study include the osteopenic cohort, greater ethnic diversity, placebo-controlled design and inclusion of a higher dose of simvastatin as well as the 20 mg dose.
+In addition to the possibility that statins actually have neither favorable nor unfavorable impact on bone metabolism in humans, there are several potential alternative explanations for these observations. First, simvastatin may not be the optimal choice of HMG coA reductase inhibitor. Simvastatin was effective both for stimulating bone morphogenetic protein-2 formation in vitro, and inducing bone formation in rodents [1], rendering this possibility less likely. However, the elimination half-life of simvastatin is relatively short [17], and allows for the possibility that agents with longer half-lives, such as atorvastatin [18], might demonstrate efficacy. Second, the dose of simvastatin used may have been inadequate. At the time this trial was designed, simvastatin 40 mg was the highest dose marketed. Subsequently, the 80 mg dose has become available with similar safety profile to the 40 mg dose; the possibility that a higher dose might affect bone turnover cannot be excluded.
+Third, the sample size may have been too small to detect changes in plasma concentrations of bone markers. For example, in a 12 week randomized comparison of 2 doses of simvastatin and 2 doses of atorvastatin, with about 200 subjects in each study arm, simvastatin reduced bone ALP by 4.1% and 6.3% from baseline levels at the 40 mg and 80 mg doses, respectively [12]. That trial was designed to evaluate lipid effects, not bone markers, so included men and women with unknown bone density status. In interpreting these results, the observed reduction in bone ALP may indicate inhibition of bone resorption, but this was not reflected by a parallel reduction in CTX-I. Further, if new bone was being created, as was observed in the rat model, one might expect bone ALP to rise, as in Paget's disease [19], rather than the observed fall. The change in concentration of a bone marker which reflects a clinically meaningful change, is also an issue. With alendronate, for example, 80% reductions in markers of bone resorption were observed within 6 weeks [20]. Thus, a change of a few percentage points may not be clinically important. A comparable reduction in NTX-I to that observed with alendronate would have been readily detected with the sample size studied.
+Fourth, the ultrasound entry screen for low bone mineral density may have yielded false-positive results, leading to inclusion of some women with normal bone density. Manufacturer specifications suggest that in 90% of women with Sahara T-score less than -1, osteoporosis will be confirmed by dual x-ray absorptiometry [21]. Finally, the duration of treatment may have been insufficient. Alendronate significantly reduces bone marker concentrations within a few weeks [20], but effects of HMG coA reductase inhibitors may not be apparent so quickly.
+
+Conclusions
+Our study revealed neither deleterious nor favorable effect of simvastatin on bone turnover during 12 weeks of therapy, and does not support a role for simvastatin as a clinically useful modulator of bone remodeling. Further study is needed to determine whether other agents or regimens may prove more promising.
+
+Competing interests
+None declared
+
+Pre-publication history
+The pre-publication history for this paper can be accessed here:
+
+

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="-1">
+    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+    <style>
+    	#wrapper {
+		    padding-left: 0;
+		    -webkit-transition: all 0.5s ease;
+		    -moz-transition: all 0.5s ease;
+		    -o-transition: all 0.5s ease;
+		    transition: all 0.5s ease;
+		}
+
+		#sidebar-wrapper {
+		    z-index: 1000;
+		    position: fixed;
+		    left: 150px;
+		    width: 0;
+		    height: 100%;
+		    margin-left: -150px;
+		    overflow-y: auto;
+		    background: #000;
+		    -webkit-transition: all 0.5s ease;
+		    -moz-transition: all 0.5s ease;
+		    -o-transition: all 0.5s ease;
+		    transition: all 0.5s ease;
+		}
+
+		#page-content-wrapper {
+		    width: 95%;
+		    position: absolute;
+		    padding: 15px;
+		}
+
+		/* Sidebar Styles */
+
+		.sidebar-nav {
+		    position: absolute;
+		    top: 0;
+		    width: 150px;
+		    margin: 0;
+		    padding: 0;
+		    list-style: none;
+		}
+
+		.sidebar-nav li {
+		    text-indent: 20px;
+		    line-height: 40px;
+		}
+
+		.sidebar-nav li a {
+		    display: block;
+		    text-decoration: none;
+		    color: #999999;
+		}
+
+		.sidebar-nav li a:hover {
+		    text-decoration: none;
+		    color: #fff;
+		    background: rgba(255,255,255,0.2);
+		}
+
+		.sidebar-nav li a:active,
+		.sidebar-nav li a:focus {
+		    text-decoration: none;
+		}
+
+		.sidebar-nav > .sidebar-brand a:hover {
+		    color: #fff;
+		    background: none;
+		}
+
+		@media(min-width:768px) {
+		    #wrapper {
+		        padding-left: 150px;
+		    }
+
+		    #wrapper.toggled {
+		        padding-left: 0;
+		    }
+
+		    #sidebar-wrapper {
+		        width: 150px;
+		    }
+
+
+		    #page-content-wrapper {
+		        padding: 20px;
+		        position: relative;
+		    }
+
+		}
+
+    	body {
+    		line-height: 1.4em;
+    	}
+    	img {
+    		width: 80%;
+    		margin-left: auto;
+    		margin-right: auto;
+    		display: block;
+    	}
+    	.hl {
+    		border-radius: 4px;
+    		padding-left: 2px;
+    		padding-right: 2px;
+    	}
+    	.o {
+    		background: #cbd5e8;
+    	}
+    	.i {
+    		background: #b3e2cd;
+    	}
+    	.section {
+    		border: 1px solid grey;
+    		border-radius: 4px;
+    		margin: 5px;
+    		padding: 5px;
+    	}
+    	p {
+    		padding-left: 10px;
+    		padding-right: 10px;
+    	}
+    	h2, h3, h4 {
+    		margin-block-start: 0.33em;
+    	}
+    	ol { counter-reset: item; }
+        ol li { display: block; }
+        ol li:before {
+            content: counter(item) ". ";
+            counter-increment: item;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="#task">Task Overview</a>
+                </li>
+                <li>
+                    <a href="#details">Details</a>
+                </li>
+                <li>
+                    <a href="#interface">Interface</a>
+                </li>
+                <li>
+                    <a href="#anns">Existing Anns</a>
+                </li>
+                <li>
+                	<a href="#controls">Controls</a>
+                </li>
+            </ul>
+        </div>
+        <div id="page-content-wrapper">
+			<div class="section container-fluid" id="task">
+			<h2>Task</h2>
+			<p>The goal of this task is to read a full-text medical journal article and extract information about which treatments were studied and how they were evaluated. There are two components to this task:</p>
+			<ul>
+				<li>Highlight all occurences of each <span class="hl i">intervention</span> that was studied, what was used as a <span class="hl i">comparator</span>, and which <span class="hl o">outcomes</span> were measured for this comparison.</li>
+				<li>Group the highlighted spans together based on which spans refer to exactly the same <span class="hl i">treatment</span> or <span class="hl o">outcome</span>.</li>
+			</ul>
+			</div>
+			<div class="section container-fluid" id="details">
+				<h2>Details: Highlighting</h2>
+				<p>We are only interested in the <span class="hl i">treatments</span> and <span class="hl o">outcomes</span> that are actively evaluated in this particular article.</p>
+				<p>When highlighting a span, keep the span as short as possible while including any details that make it meaningfully different from other similar spans. For example, try to include any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>.</p>
+
+				<h2>Details: Grouping</h2>
+				<p>When grouping together the highlighted <span class="hl i">treatments</span> and <span class="hl o">outcomes</span>, the goal is to group any spans that are <b>semantically equivalent</b>. In other words, all of the spans within a single group should represent the same clinical concept and be interchangable in the context of this article (ignore any syntactic differences such as verb tense or pluralization).</p>
+			</div>
+			<div class="section container-fluid" id="interface">
+				<h2>Interface</h2>
+
+				<h3>Overview</h3>
+				<p>The interface for this task is designed for you to highlight as you read through the article, and immediately assign the highlights to groups that you create.</p>
+				<div class="img">
+			  		<img src="https://i.imgur.com/sDyFCFX.png" title="hl interface" />
+				</div>
+				<p>The annotation interface containes three main components:</p>
+				<ol>
+					<li><b>Article section tabs</b>: each full-text article is broken up in to sections. Click on a tab to load that section for highlighting.</li>
+					<li><b>Article content</b>: this displays the text content of the current section. This is where you will highlight the relevant text spans.</li>
+					<li>
+						<b>Span groups</b>: this is the interface for creating groups and assigning spans to them.
+						<ol>
+							<li><b>Span types</b>: the <span class="hl i">treatment</span> and <span class="hl o">outcome</span> groups you create are separated to decrease clutter. Switch between them with these tabs.</li>
+							<li><b>New group</b>: click this button to create a new group. When naming a group, please be descriptive but succinct.</li>
+							<li><b>Submit</b>: once you have finished annotation the entire article, this button will light up so you can move to the next article.</li>
+						</ol>
+					</li>
+				</ol>
+				<h3>Example</h3>
+				<p>Here is an example of what the interface looks like during the annotation process. You can see how the different <span class="hl o">outcomes</span> have been divided in to different groups. Here, <span class="hl o">"first-step" pain</span> is mentioned repeatedly. One of the mentions includes additional detail about the <b>endpoint</b> (<span class="hl o">after one week</span>), but every measurement used the same <b>endpoint</b> so they are all equivalent.</p>
+
+				<div class="img">
+			  		<img src="https://i.imgur.com/T6MDhXO.png" title="example" />
+				</div>
+			</div>
+			<div class="section container-fluid" id="anns">
+				<h2>Existing Annotations</h2>
+				<p>Previous annotators have provided details about the article's <span class="hl i">interventions</span>, <span class="hl i">comparators</span>, and <span class="hl o">outcomes</span>. The last tab of the article contains these annotations.</p>
+				<div class="img">
+					<img src="https://i.imgur.com/A5yl3Fz.png" title="source: imgur.com" />
+				</div>
+				<p>Assign each of these spans to the relevant group by clicking on it and then adding it. Once you have assigned all of the provided annotations, you may submit the article.</p>
+		  	</div>
+		  	<div class="section container-fluid" id="controls">
+		  		<p>Use the following keybindings to facilitate annotation:</p>
+		  		<ul>
+		  			<li><b>a</b>: add highlighted/selected span to current group</li>
+		  			<li><b>g</b>: create new group</li>
+		  			<li><b>&lt;del&gt;</b>: remove selected span</li>
+		  			<li><b>t</b>: show Treatment groups</li>
+		  			<li><b>o</b>: show Outcome groups</li>
+		  			<li><b>x</b>: delete current group</li>
+		  			<li><b>[1-9]</b>: show the numbered group</li>
+		  		</ul>
+		  	</div>
+		</div>
+	</body>
+</html>

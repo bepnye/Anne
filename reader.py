@@ -121,28 +121,16 @@ class XMLReader(Reader):
     will pick one and then return the name of it.
     """
     def _get_next_file(self, user):
-        user_progress = np.genfromtxt('.//data//user_progress.csv', delimiter = ",", dtype = str)
-        user_progress = user_progress.reshape((int(user_progress.size / 2), 2))
-        
-        # allow users to have their own list to work on, versus, a group-shared list.
-        try:
-            ordering = np.loadtxt('.//data//ordering_list_' + user + '.txt', dtype = float)
-        except:
-            ordering = np.loadtxt('.//data//ordering_list.txt', dtype = float)
-            
-        i = 0
-        for row in user_progress:
-            row_val = int(float(row[1]))
-            if (row[0] == user and len(ordering) > row_val):
-                return int(ordering[row_val])
-            elif (row[0] == user and not(len(ordering) > row_val)):
-                return None
-            i += 1
-           
-        user_progress = user_progress.tolist()
-        user_progress.append([user, 0])
-        np.savetxt('.//data//user_progress.csv', np.asarray(user_progress), delimiter = ",", fmt = "%s")
-        return int(ordering[0])
+        fname = 'data/{}.progress'.format(user)
+        if not os.path.isfile(fname):
+          with open(fname, 'w') as fout:
+            fout.write('0')
+
+        n = int(open(fname).read())
+        ids = [l.strip() for l in open('data/ordering_list.txt').readlines()]
+        if n < len(ids):
+          return ids[n]
+        return None
         
     """
     Given the path that leads to a folder of ONLY XML files, the function
@@ -200,35 +188,12 @@ class XMLReader(Reader):
           section_content.append(self._get_sections(node))
         elif node.tag == 'title':
           if node.text:
-            section_title = node.text
+            section_title = { 'text': node.text, 'html': node.text }
           elif len(node) == 1:
-            section_title = node[0].text
+            section_title = { 'text': node[0].text, 'html': ET.tostring(node[0]).decode() }
         else:
           section_content.append(ET.tostring(node).decode())
       return [section_title, section_content]
-    """
-        arr = []
-        title = ""
-        paragraph = ""
-        children = body.getchildren()
-        for i, child in enumerate(children):
-            child = children[i]
-            if (child.tag == 'sec'):
-                sub_sec = self._get_sections(child)
-                arr.append(sub_sec)
-            elif (child.tag == 'title'):
-                title = ET.tostring(child, method = 'text', encoding = 'utf8').decode('utf-8')
-            else:
-                paragraph += ET.tostring(child).decode('utf-8')
-                
-        if (title == '' and len(arr) > 0):
-            return arr
-        elif (len(arr) > 0):
-            return [title, arr]
-        else:
-            return [title, paragraph]
-    """
-         
     
     """
     Return all of the text in an XML file.
@@ -242,7 +207,8 @@ class XMLReader(Reader):
     def _get_abstract(self, article_meta):
         abst_xml = article_meta.find('abstract')
         abst_info = self._get_sections(abst_xml)
-        abst_info[0] = 'Abstract' # title
+        if abst_info[0] == '':
+          abst_info[0] = { 'text': 'Abstract', 'html': 'Abstract' }
         return abst_info
 
     def _get_body(self, body):
@@ -290,11 +256,11 @@ class XMLReader(Reader):
     Otherwise, it will only display the abstract.
     """
     def get_next_article(self, user, next_file=None):
-        next_file = next_file or glob.glob('{}/*.html'.format(self.path))[0]
 
+        next_file = next_file or self._get_next_file(user)
         if not next_file:
-            return None
-            
+          return None
+
         path_to_file =  self.path + '/' + str(next_file) + '.html' # the path to XML files
         print('Parsing:', path_to_file)
         et = ET.parse(path_to_file) 
