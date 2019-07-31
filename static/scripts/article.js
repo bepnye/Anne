@@ -479,8 +479,8 @@ function addRadioButton(text, suffix, txtStart, txtEnd, globalId) {
     var radioDiv = document.createElement('div');
     radioDiv.id = divId;
     radioDiv.classList.add('selected-ico', 'selected-'+suffix);
-    radioDiv.setAttribute('xml_start', txtStart);
-    radioDiv.setAttribute('xml_end', txtEnd);
+    radioDiv.setAttribute('xml_i', txtStart);
+    radioDiv.setAttribute('xml_f', txtEnd);
     radioDiv.setAttribute('element', _curE);
     radioDiv.setAttribute('group', _curGroup);
 
@@ -606,8 +606,8 @@ function submit() {
     console.log(s);
     var e = s.getAttribute('element');
     var groupId = s.getAttribute('group');
-    var start = s.getAttribute('xml_start');
-    var end   = s.getAttribute('xml_end');
+    var start = s.getAttribute('xml_i');
+    var end   = s.getAttribute('xml_f');
     var txt = s.lastChild.textContent;
     console.log(e, groupId, start, end, txt);
     corefs[e][groupId].spans.push({'i': start, 'f': end, 'txt': txt});
@@ -854,8 +854,8 @@ function appendAnn(div, ann, targetE) {
     }
   
     var offsets = document.createElement('offsets');
-    offsets.setAttribute('xml_i', ann.Intervention + '|' + ann.Comparator);
-    offsets.setAttribute('xml_f', ann.Outcome);
+    offsets.setAttribute('xml_i', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
+    offsets.setAttribute('xml_f', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
     offsets.textContent = ann[e];
 
     highlight.appendChild(offsets);
