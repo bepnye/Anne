@@ -146,6 +146,11 @@ function showAnnTab(e) {
   $('#nav-tab-'+e).tab('show')
 }
 
+function showGroupId(e, id) {
+  showAnnTab(e);
+  $(document.querySelector('[id="nav-tab-'+e+'-'+id+'"]')).tab('show')
+}
+
 function showGroup(e, idx) {
   showAnnTab(e);
   $(document.querySelector('[tab-index="'+idx+'"][element="'+e+'"]')).tab('show')
@@ -405,8 +410,10 @@ function highlightClick(e) {
     uncheckAllRadio();
   } else {
     var radioInput = document.getElementById(spanId);
-    showGroup(radioInput.parentNode.getAttribute('element'), radioInput.parentNode.getAttribute('group'));
+    var groupE = radioInput.parentNode.getAttribute('element');
+    var groupId = radioInput.parentNode.getAttribute('group');
     radioInput.click();
+    showGroupId(groupE, groupId);
   }
 }
 
@@ -537,7 +544,7 @@ function handleKeyPress (evt) {
   else if (isFinite(evt.key)) {
     showGroup(_curE, evt.key)
   }
-  else if (evt.key == 'a') {
+  else if (evt.key == 's') {
     addSpan();
   }
   else if (evt.key == 'g') {
