@@ -124,7 +124,12 @@
     		padding-right: 10px;
     	}
     	h2, h3, h4 {
+    		padding-left: 10px;
+    		padding-right: 10px;
     		margin-block-start: 0.33em;
+    	}
+    	h2 {
+    		text-align: center;
     	}
     	ol { counter-reset: item; }
         ol li { display: block; }
@@ -170,11 +175,21 @@
 			</div>
 			<div class="section container-fluid" id="details">
 				<h2>Details: Highlighting</h2>
-				<p>We are only interested in the <span class="hl i">treatments</span> and <span class="hl o">outcomes</span> that are actively evaluated in this particular article.</p>
-				<p>When highlighting a span, keep the span as short as possible while including any details that make it meaningfully different from other similar spans. For example, try to include any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>.</p>
+				<p>As you read through the article, highlight every span of text you find that represents one of the studied <span class="hl i">treatments</span> or <span class="hl o">outcomes</span>.</p>
+				<ul>
+					<li>We are only interested in the <span class="hl i">treatments</span> and <span class="hl o">outcomes</span> that are actively evaluated in this particular article.</li>
+					<li>Keep the highlighted span as short as possible while including any details that make it meaningfully different from other similar spans (such as any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>).</li>
+					<li>If multiple <span class="hl o">outcomes</span> are listed in a row, highlight them individually.</li>
+					<li>For <b>complex interventions</b> that involve multiple <span class="hl i">treatments</span>, include as much of full intervention strategy as you can in the highlighted span.</li>
+				</ul>
 
 				<h2>Details: Grouping</h2>
-				<p>When grouping together the highlighted <span class="hl i">treatments</span> and <span class="hl o">outcomes</span>, the goal is to group any spans that are <b>semantically equivalent</b>. In other words, all of the spans within a single group should represent the same clinical concept and be interchangable in the context of this article (ignore any syntactic differences such as verb tense or pluralization).</p>
+				<p>After highlighting each span, group it together with other spans you've already highlighted that are <b>semantically equivalent</b>. In other words, all of the spans within a single group should represent the same clinical concept and be interchangable in the context of this article. If you don't already have a group that fits the highlighted span, create a new group for it.</p>
+				<ul>
+					<li>When deciding how to group spans, ignore any syntactic differences such as verb tense or pluralization.</li>
+					<li>If the highlighted span is a <b>general term</b> that refers to several existing groups, place it in its own group. For example, <span class="hl o">adverse effects</span> would belong in a different group than <span class="hl o">headache</span> or <span class="hl o">nausea</span>.</li>
+					<li>When creating a group, you can pick any name you like - the names are only to help faciliate the annotation process.
+				</ul>
 			</div>
 			<div class="section container-fluid" id="interface">
 				<h2>Interface</h2>

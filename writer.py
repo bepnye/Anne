@@ -40,22 +40,11 @@ class CSVWriter(Writer):
         self.write_file = write_file
 
     def submit_annotation(self, data):
-        row_heading = ['user_id', 'prompt id', 'pmid_id', 'selection', 
-                       'annotation', 'outcome', 'comparator', 
-                       'intervention', 'invalid prompt', 'prompt reason']
-                       
-        if (data['selection'] != 'Cannot tell based on the abstract'):
-            self.update_user_progress(data['userid'])
+        self.update_user_progress(data['userid'])
                                
-        path = './/all_outputs//out_{}.csv'.format(data['userid'])
-        data = self.__finish_data__(data) 
-        my_file = Path(path)
-        not_file = not(my_file.is_file())
-        with open(r'' + path, 'a', newline = '', encoding = 'utf-8') as f:
-            writer = csv.writer(f)
-            if (not_file):
-                writer.writerow(row_heading)
-            writer.writerow([str(x) for x in data])               
+        path = './/all_outputs//{}_{}_coref.json'.format(data['userid'], data['id'])
+        with open(path, 'w') as fout:
+          fout.write(data['corefs']);
 
         return None
        
@@ -64,19 +53,10 @@ class CSVWriter(Writer):
     incriments the persons progress on work!
     """
     def update_user_progress(self, user):
-        user_progress = np.genfromtxt('.//data//user_progress.csv', delimiter = ",", dtype = str)
-        user_progress = user_progress.reshape((int(user_progress.size / 2), 2))              
-        i = 0
-        for row in user_progress:
-            if (row[0] == user):
-                user_progress[i][1] = str(int(user_progress[i][1]) + 1)
-                np.savetxt('.//data//user_progress.csv', user_progress, delimiter = ",", fmt = "%s")
-                break
-            i += 1
-           
-        
-        return None
-    
+      fname = 'data/{}.progress'.format(user)
+      n = int(open(fname).read())
+      with open(fname, 'w') as fout:
+        fout.write(str(n+1))
 
     def get_results(self):
         with open(self.write_file, 'r') as csvfile:
