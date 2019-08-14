@@ -103,14 +103,13 @@ def annotate_full(userid, id_ = None):
     
   anns = [];
   for idx, a in all_anns.iterrows():
-    print(a['RowID'], id_.replace('PMC', ''))
     if str(a['RowID']) == id_.replace('PMC', ''):
       data = { 'idx': idx }
       for k in ['Intervention', 'Comparator', 'Outcome']:
         data[k] = a[k]
       anns.append(data)
-  print(anns)
 
+  save_last_path(userid, art.get_extra()['path'])
   return flask.render_template('full_article.html',
                                userid = userid,
                                annotations = anns,
@@ -184,16 +183,19 @@ def results():
 """
 Get the last path.
 """
+def get_user_progress_fname(user):
+  return 'data/{}_progress.txt'.format(user)
+
 def get_last_path(user):
-    txt = np.genfromtxt(user + "_progress.txt", delimiter = ' ')
-    return str(int(txt + 0))
+  return open(get_user_progress_fname(user)).read()
     
 def save_last_path(user, path):
-    np.savetxt(user + "_progress.txt", [int(path)], delimiter = ' ',  fmt = '%.18e')
+  with open(get_user_progress_fname(user), 'w') as fp:
+   fp.write(path)
 
 """
 Run the application.
 """
 if __name__ == '__main__':
    #application.run()
-   application.run(host = '0.0.0.0', port = 8081, debug = True) 
+   application.run(host = '0.0.0.0', port = 8001, debug = True) 

@@ -40,11 +40,33 @@ function bindEvents() {
 
 	$(document).on('change', 'input[type=radio][name=spans]', e => radioChange(e));
   $(document).on('click', '.highlight', e => highlightClick(e));
+  $(document).on('dblclick', '.group-tab', e => doubleClick(e));
   
   $("#submit").click(submit);
   document.onmouseup = addButtonAvail; // call this function whenever the person lifts up his or her mouse
   document.onkeyup = handleKeyPress;
   console.log('good to go!');
+}
+
+function doubleClick(e) {
+  var tab = e.target;
+  var curName = tab.getAttribute('group-name');
+  if (e.shiftKey) {
+    var groupName = prompt("New group:", curName);
+    if (groupName == null) {
+      return;
+    } else {
+      createGroup(groupName);
+    }
+  } else {
+    var groupName = prompt("Rename group:", curName);
+    if (groupName == null) {
+      return;
+    } else {
+      tab.setAttribute('group-name', groupName);
+      setTabIndices();
+    }
+  }
 }
 
 function sleep(ms) {
@@ -115,7 +137,7 @@ function createGroup(groupName) {
   var groupId = e + '-' + groupIdx;
 
   var newTab = document.createElement('a');
-  newTab.classList.add('nav-item', 'nav-link', 'nav-inner');
+  newTab.classList.add('nav-item', 'nav-link', 'nav-inner', 'group-tab');
   newTab.id = 'nav-tab-'+groupId;
   newTab.setAttribute('data-toggle', 'tab');
   newTab.setAttribute('href', '#'+groupId);
@@ -701,6 +723,7 @@ function moveSpan() {
 
     if (sourceE == _curE && sourceGroup != _curGroup) {
       var targetParent = document.getElementById(_curE+'-'+_curGroup+'-selected');
+      radioDiv.setAttribute('group', _curGroup);
       radioDiv.parentNode.removeChild(radioDiv);
       targetParent.appendChild(radioDiv);
     }

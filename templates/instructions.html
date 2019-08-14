@@ -95,6 +95,7 @@
 
     	body {
     		line-height: 1.4em;
+        margin-top: 0px;
     	}
     	img {
     		width: 80%;
@@ -157,6 +158,9 @@
                     <a href="#interface">Interface</a>
                 </li>
                 <li>
+                    <a href="#example">Example</a>
+                </li>
+                <li>
                     <a href="#anns">Existing Anns</a>
                 </li>
                 <li>
@@ -167,10 +171,11 @@
         <div id="page-content-wrapper">
 			<div class="section container-fluid" id="task">
 			<h2>Task</h2>
-			<p>The goal of this task is to read a full-text medical journal article and extract information about which treatments were studied and how they were evaluated. There are two components to this task:</p>
+			<p>The goal of this task is to read a full-text medical journal article and extract information about which treatments were studied and how they were evaluated. There are three components to this task:</p>
 			<ul>
 				<li>Highlight all occurences of each <span class="hl i">intervention</span> that was studied, what was used as a <span class="hl i">comparator</span>, and which <span class="hl o">outcomes</span> were measured for this comparison.</li>
 				<li>Group the highlighted spans together based on which spans refer to exactly the same <span class="hl i">treatment</span> or <span class="hl o">outcome</span>.</li>
+        <li>Go through the previously extracted annotations for the article and assign them to the relevant groups.</li>
 			</ul>
 			</div>
 			<div class="section container-fluid" id="details">
@@ -178,8 +183,9 @@
 				<p>As you read through the article, highlight every span of text you find that represents one of the studied <span class="hl i">treatments</span> or <span class="hl o">outcomes</span>.</p>
 				<ul>
 					<li>We are only interested in the <span class="hl i">treatments</span> and <span class="hl o">outcomes</span> that are actively evaluated in this particular article.</li>
-					<li>Keep the highlighted span as short as possible while including any details that make it meaningfully different from other similar spans (such as any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>).</li>
-					<li>If multiple <span class="hl o">outcomes</span> are listed in a row, highlight them individually.</li>
+					<li>Keep the highlighted text as short as possible while including any details that are specific to that span.</li>
+          <li>Try to include details that differentiate the span from other similar but clinically different spans in the document (such as any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>).</li>
+					<li>If multiple distinct concepts are listed in a row, highlight them individually.</li>
 					<li>For <b>complex interventions</b> that involve multiple <span class="hl i">treatments</span>, include as much of full intervention strategy as you can in the highlighted span.</li>
 				</ul>
 
@@ -197,28 +203,30 @@
 				<h3>Overview</h3>
 				<p>The interface for this task is designed for you to highlight as you read through the article, and immediately assign the highlights to groups that you create.</p>
 				<div class="img">
-			  		<img src="https://i.imgur.com/sDyFCFX.png" title="hl interface" />
+			  		<img src="https://i.imgur.com/rHSoWTZ.png" title="hl interface" />
 				</div>
 				<p>The annotation interface containes three main components:</p>
-				<ol>
-					<li><b>Article section tabs</b>: each full-text article is broken up in to sections. Click on a tab to load that section for highlighting.</li>
-					<li><b>Article content</b>: this displays the text content of the current section. This is where you will highlight the relevant text spans.</li>
-					<li>
-						<b>Span groups</b>: this is the interface for creating groups and assigning spans to them.
-						<ol>
-							<li><b>Span types</b>: the <span class="hl i">treatment</span> and <span class="hl o">outcome</span> groups you create are separated to decrease clutter. Switch between them with these tabs.</li>
-							<li><b>New group</b>: click this button to create a new group. When naming a group, please be descriptive but succinct.</li>
-							<li><b>Submit</b>: once you have finished annotation the entire article, this button will light up so you can move to the next article.</li>
-						</ol>
-					</li>
-				</ol>
-				<h3>Example</h3>
-				<p>Here is an example of what the interface looks like during the annotation process. You can see how the different <span class="hl o">outcomes</span> have been divided in to different groups. Here, <span class="hl o">"first-step" pain</span> is mentioned repeatedly. One of the mentions includes additional detail about the <b>endpoint</b> (<span class="hl o">after one week</span>), but every measurement used the same <b>endpoint</b> so they are all equivalent.</p>
-
+				<ul>
+					<li><b>Article Tabs</b>: each full-text article is broken up in to sections. Click on a tab to load that section for highlighting.</li>
+					<li><b>Tab Content</b>: this displays the text content of the current section. This is where you will highlight the relevant text spans.</li>
+					<li><b>Created Groups</b>: creating a new group will add a tab here that you can use to navigate between them.</li>
+					<li><b>Highlighted Spans</b>: each span you add to the selected group will be collected in this area for you to reference.</li>
+				</ul>
+				<h3 id="example">Example</h3>
+				<p>Here is an example of what the interface looks like during the annotation process. You can see how the different <span class="hl o">outcomes</span> have been divided in to different groups.</p>
 				<div class="img">
-			  		<img src="https://i.imgur.com/T6MDhXO.png" title="example" />
+			  		<img src="https://i.imgur.com/V1f5pgX.png" title="example" />
 				</div>
+        <ol>
+          <li>The first mention of <span class="hl o">'first-step' pain</span> includes extra detail about how the outcome is specified.</li>
+          <li><span class="hl o">Foot pain</span> is similar to <span class="hl o">'first-step' pain</span>, but is not interchangeable in this trial and is assigned to a new group.</li>
+          <li>The second mention of <span class="hl o">'first-step' pain</span> includes a specific endpoint, but since only one <b>endpoint</b> is measured in this trial this mention is semantically equivalent to the first.</li>
+          <li>The first <span class="hl i">treatment</span> mentioned is a <b>complex intervention</b>, so we highlight the entire span as a single mention.</li>
+          <li>Subsequent references to the <span class="hl i">low-Dye taping and sham ultrasound</span> intervention don't explicitly include the complete intervention, but in the context of this article they refer to the same intervention and are assigned to the same group.</li>
+        </ol>
+
 			</div>
+
 			<div class="section container-fluid" id="anns">
 				<h2>Existing Annotations</h2>
 				<p>Previous annotators have provided details about the article's <span class="hl i">interventions</span>, <span class="hl i">comparators</span>, and <span class="hl o">outcomes</span>. The last tab of the article contains these annotations.</p>
@@ -230,14 +238,15 @@
 		  	<div class="section container-fluid" id="controls">
 		  		<p>Use the following keybindings to facilitate annotation:</p>
 		  		<ul>
-		  			<li><b>a</b>: add highlighted/selected span to current group</li>
+		  			<li><b>s</b>: add highlighted/selected span to current group</li>
+		  			<li><b>e/&lt;del&gt;</b>: remove selected span</li>
 		  			<li><b>g</b>: create new group</li>
-		  			<li><b>&lt;del&gt;</b>: remove selected span</li>
+		  			<li><b>d</b>: delete current group</li>
 		  			<li><b>t</b>: show Treatment groups</li>
 		  			<li><b>o</b>: show Outcome groups</li>
-		  			<li><b>x</b>: delete current group</li>
 		  			<li><b>[1-9]</b>: show the numbered group</li>
 		  		</ul>
+          <p><b>Double-click</b> on a group to rename it, or <b>shift + double-click</b> a group to create a new group starting from the same name.<p>
 		  	</div>
 		</div>
 	</body>
