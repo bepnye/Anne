@@ -1,20 +1,14 @@
 "use-strict";
-
 globalId = 0;
 
 _curE = null;
 _curGroup = null;
 
-function addSpanWrapper() {
-  addSpan()
-  var d = document.getElementById("nav-tabs-article").children[5]
-  openTab(d, d.id);
-}
 
 function bindEvents() {
   $("#add-group").click(() => { addGroup(); });
   $("#del-group").click(() => { delGroup(); });
-  $("#add-span").click(() => { addSpanWrapper(); });
+  $("#add-span").click(() => { addSpan(); });
   $("#del-span").click(() => { removeSpan(); });
 
   $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
@@ -386,12 +380,12 @@ function addFromHighlight() {
   window.getSelection().removeAllRanges();
 
   if (highlighted === "") {
-    return ;
+    return "error";
   }
 
   if (!_curE || !_curGroup) {
     alert('Create a group first');
-    return;
+    return "error";
   }
 
   if (isAlreadyHighlighted(highlighted) === true) {
@@ -480,32 +474,31 @@ async function radioChange(e) {
 * Add the text to the on-going list.
 */
 function add(selectedNodes, startOffset, endOffset, highlighted, suffix) {
+  var globalId = getNewGlobalId();
 
-    var globalId = getNewGlobalId();
+  console.log(selectedNodes);
+  console.log(selectedNodes.map(n => n.parentNode));
+  var labeledNodes = selectedNodes.filter(n => n.parentNode.classList.contains('highlight') || n.parentNode.parentNode.classList.contains('highlight'));
+  if (labeledNodes.length > 0) {
+    alert('Cannot overwrite existing highlight!');
+    return false;
+  }
 
+  textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, suffix, globalId);
+
+  var startNode = textNodes[0];
+  var endNode = textNodes[textNodes.length - 1];
+
+  var txtStart = -1;
+  var txtEnd = -1;
+  try {
+    txtStart = parseInt(startNode.getAttribute('xml_i'));
+    txtEnd = parseInt(endNode.getAttribute('xml_f'));
+  } catch {
+    console.log('Unable to find txt start/end info in tag attr');
     console.log(selectedNodes);
-    console.log(selectedNodes.map(n => n.parentNode));
-    var labeledNodes = selectedNodes.filter(n => n.parentNode.classList.contains('highlight') || n.parentNode.parentNode.classList.contains('highlight'));
-    if (labeledNodes.length > 0) {
-      alert('Cannot overwrite existing highlight!');
-      return false;
-    }
-
-    textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, suffix, globalId);
-
-    var startNode = textNodes[0];
-    var endNode = textNodes[textNodes.length - 1];
-
-    var txtStart = -1;
-    var txtEnd = -1;
-    try {
-      txtStart = parseInt(startNode.getAttribute('xml_i'));
-      txtEnd = parseInt(endNode.getAttribute('xml_f'));
-    } catch {
-      console.log('Unable to find txt start/end info in tag attr');
-      console.log(selectedNodes);
-    }
-    addRadioButton(highlighted, suffix, txtStart, txtEnd, globalId);
+  }
+  addRadioButton(highlighted, suffix, txtStart, txtEnd, globalId);
 }
 
 function addRadioButton(text, suffix, txtStart, txtEnd, globalId) {
@@ -628,38 +621,53 @@ function getActiveNavTab() {
   return document.getElementsByClassName("show active")[0];
 }
 
+function temp_highlight_all(str_) {
+  var elements = parse_element(document.getElementsByClassName("tab-pane-article"));
+  for (var i = 0; i < elements.length; i++) {
+    var elem = elements[i];
+    var idx  = elem.textContent.indexOf(str_);
+    if (idx >= 0 && elem.textContent.length != str_.length) { // IGNORE THE CASE THAT WE ALREADY DID THUS FAR
+      var range = document.createRange();
+      setSelectionRange(elem, idx, idx + str_.length);
+
+      if (window.getSelection().toString()) {
+        break;
+      } else {
+        var parent = elem;
+        while (parent == null || parent.getAttribute('role') == null || parent.getAttribute('role') != 'tabpanel') {
+          parent = parent.parentElement;
+        }
+
+        var p      = document.getElementById(parent.id.split("-").join("-tab-"));
+        deactivate_tab();
+        p.classList.add("active");
+        parent.classList.add("active");
+        parent.classList.add("show");
+        break;
+      }
+    }
+  }
+
+  temporary_highlight();
+  if (i != elements.length) {
+    temp_highlight_all(str_);
+  }
+
+  deactivate_tab();
+}
 
 function addSpan() {
   var cur_tab = getActiveNavTab();
   if (window.getSelection().toString()) {
     var str_ = window.getSelection().toString(); // TODO: Do something smart about stripping and lower-casing
-    addFromHighlight();
-    var elements = parse_element(document.getElementsByClassName("tab-pane-article"));
-    for (var i = 0; i < elements.length; i++) {
-      var elem = elements[i];
-      var idx  = elem.textContent.indexOf(str_);
-      if (idx >= 0 && elem.textContent.length != str_.length) { // IGNORE THE CASE THAT WE ALREADY DID THUS FAR
-        var range = document.createRange();
-        setSelectionRange(elem, idx, idx + str_.length);
-
-        if (window.getSelection().toString()) {
-          break;
-        } else {
-          var parent = elem.parentElement.parentElement;
-          var p      = document.getElementById(parent.id.split("-").join("-tab-"));
-          deactivate_tab();
-          p.classList.add("active");
-          parent.classList.add("active");
-          parent.classList.add("show");
-          break;
-        }
-      }
+    var ret  = addFromHighlight();
+    if (ret != "error") {
+      temp_highlight_all(str_);
+      deactivate_tab();
+      cur_tab.classList.add("show");
+      cur_tab.classList.add("active");
     }
 
-    addSpan();
-    deactivate_tab();
-    cur_tab.classList.add("show");
-    cur_tab.classList.add("active");
   } else if ($('.highlight.active').length > 0) {
     moveSpan();
   }
@@ -917,12 +925,15 @@ function get_Highlight_Text_And_Range() {
   if (window.getSelection) {
     selection = window.getSelection();
     text = selection.toString();
-    if (text != "") { //MAYBE DONT REMOVE THIS?
+    if (text != "") { // MAYBE DONT REMOVE THIS?
       range = selection.getRangeAt(0);
-    } else {
+    } else if (window.getSelection().rangeCount > 0) {
       var clone  = window.getSelection().getRangeAt(0).cloneContents();
       var range  = window.getSelection().getRangeAt(0);
       text   = clone.textContent;
+    } else {
+      text = "";
+      range = null;
     }
   } else if (document.selection && document.selection.type != "Control") {
     range = document.selection.createRange();
