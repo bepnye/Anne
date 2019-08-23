@@ -5,10 +5,16 @@ globalId = 0;
 _curE = null;
 _curGroup = null;
 
+function addSpanWrapper() {
+  addSpan()
+  var d = document.getElementById("nav-tabs-article").children[5]
+  openTab(d, d.id);
+}
+
 function bindEvents() {
   $("#add-group").click(() => { addGroup(); });
   $("#del-group").click(() => { delGroup(); });
-  $("#add-span").click(() => { addSpan(); });
+  $("#add-span").click(() => { addSpanWrapper(); });
   $("#del-span").click(() => { removeSpan(); });
 
   $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
@@ -41,7 +47,7 @@ function bindEvents() {
 	$(document).on('change', 'input[type=radio][name=spans]', e => radioChange(e));
   $(document).on('click', '.highlight', e => highlightClick(e));
   $(document).on('dblclick', '.group-tab', e => doubleClick(e));
-  
+
   $("#submit").click(submit);
   document.onmouseup = addButtonAvail; // call this function whenever the person lifts up his or her mouse
   document.onkeyup = handleKeyPress;
@@ -446,7 +452,7 @@ function uncheckAllRadio() {
 async function radioChange(e) {
   var tab = e.target.getAttribute('tab');
   var spanId = 'span-'+e.target.getAttribute('id');
-  
+
   $('.highlight.active').removeClass('active');
   $('.'+spanId).addClass('active');
 
@@ -474,7 +480,7 @@ async function radioChange(e) {
 * Add the text to the on-going list.
 */
 function add(selectedNodes, startOffset, endOffset, highlighted, suffix) {
-  
+
     var globalId = getNewGlobalId();
 
     console.log(selectedNodes);
@@ -489,7 +495,7 @@ function add(selectedNodes, startOffset, endOffset, highlighted, suffix) {
 
     var startNode = textNodes[0];
     var endNode = textNodes[textNodes.length - 1];
-    
+
     var txtStart = -1;
     var txtEnd = -1;
     try {
@@ -536,16 +542,131 @@ function getActiveTab() {
   return document.getElementsByClassName("tablinks active")[0].id;
 }
 
+function parse_element(elem) {
+  if (elem.length && elem.length > 0) {
+    var children = elem;
+  } else {
+    var children = elem.children;
+  }
+
+  var p_elem   = [];
+  for (var i = 0; i < children.length; i++) {
+    if (children[i].children.length != 0) {
+      p_elem.push.apply(p_elem, parse_element(children[i]));
+    } else {
+      p_elem.push(children[i]);
+    }
+  }
+
+  return p_elem;
+}
+
+function getTextNodesIn(node) {
+    var textNodes = [];
+    if (node.nodeType == 3) {
+        textNodes.push(node);
+    } else {
+        var children = node.childNodes;
+        for (var i = 0, len = children.length; i < len; ++i) {
+            textNodes.push.apply(textNodes, getTextNodesIn(children[i]));
+        }
+    }
+    return textNodes;
+}
+
+function setSelectionRange(el, start, end) {
+    if (document.createRange && window.getSelection) {
+        var range = document.createRange();
+        range.selectNodeContents(el);
+        var textNodes = getTextNodesIn(el);
+        var foundStart = false;
+        var charCount = 0, endCharCount;
+
+        for (var i = 0, textNode; textNode = textNodes[i++]; ) {
+            endCharCount = charCount + textNode.length;
+            if (!foundStart && start >= charCount
+                    && (start < endCharCount ||
+                    (start == endCharCount && i <= textNodes.length))) {
+                range.setStart(textNode, start - charCount);
+                foundStart = true;
+            }
+            if (foundStart && end <= endCharCount) {
+                range.setEnd(textNode, end - charCount);
+                break;
+            }
+            charCount = endCharCount;
+        }
+
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+    } else if (document.selection && document.body.createTextRange) {
+        var textRange = document.body.createTextRange();
+        textRange.moveToElementText(el);
+        textRange.collapse(true);
+        textRange.moveEnd("character", end);
+        textRange.moveStart("character", start);
+        textRange.select();
+    }
+}
+
+function deactivate_tab() {
+  var docs = document.getElementById("nav-tabs-article").children;
+  for (var i = 0; i < docs.length; i++) {
+    docs[i].classList.remove("active");
+  }
+
+  var docs = document.getElementById("tab-contents-article").children;
+  for (var i = 0; i < docs.length; i++) {
+    docs[i].classList.remove("active");
+    docs[i].classList.remove("show");
+  }
+}
+
+function getActiveNavTab() {
+  return document.getElementsByClassName("show active")[0];
+}
+
+
 function addSpan() {
+  var cur_tab = getActiveNavTab();
   if (window.getSelection().toString()) {
+    var str_ = window.getSelection().toString(); // TODO: Do something smart about stripping and lower-casing
     addFromHighlight();
-  } else if  ($('.highlight.active').length > 0) {
+    var elements = parse_element(document.getElementsByClassName("tab-pane-article"));
+    for (var i = 0; i < elements.length; i++) {
+      var elem = elements[i];
+      var idx  = elem.textContent.indexOf(str_);
+      if (idx >= 0 && elem.textContent.length != str_.length) { // IGNORE THE CASE THAT WE ALREADY DID THUS FAR
+        var range = document.createRange();
+        setSelectionRange(elem, idx, idx + str_.length);
+
+        if (window.getSelection().toString()) {
+          break;
+        } else {
+          var parent = elem.parentElement.parentElement;
+          var p      = document.getElementById(parent.id.split("-").join("-tab-"));
+          deactivate_tab();
+          p.classList.add("active");
+          parent.classList.add("active");
+          parent.classList.add("show");
+          break;
+        }
+      }
+    }
+
+    addSpan();
+    deactivate_tab();
+    cur_tab.classList.add("show");
+    cur_tab.classList.add("active");
+  } else if ($('.highlight.active').length > 0) {
     moveSpan();
   }
 }
 
 function addGroup() {
-  // add new group 
+  // add new group
   var groupName = window.getSelection().toString();
   if (groupName.length > 0) {
     createGroup(groupName);
@@ -748,7 +869,7 @@ function moveSpan() {
         span0.firstChild.getAttribute('xml_i'),
         span0.firstChild.getAttribute('xml_f'),
         spanId);
-    
+
     if ($('.highlight.unassigned').length == 0) {
       $('#submit').prop('disabled', false);
     }
@@ -796,8 +917,12 @@ function get_Highlight_Text_And_Range() {
   if (window.getSelection) {
     selection = window.getSelection();
     text = selection.toString();
-    if (text != "") {
+    if (text != "") { //MAYBE DONT REMOVE THIS?
       range = selection.getRangeAt(0);
+    } else {
+      var clone  = window.getSelection().getRangeAt(0).cloneContents();
+      var range  = window.getSelection().getRangeAt(0);
+      text   = clone.textContent;
     }
   } else if (document.selection && document.selection.type != "Control") {
     range = document.selection.createRange();
@@ -882,7 +1007,7 @@ function appendAnn(div, ann, targetE) {
     } else {
       highlight.classList.add('highlight-i');
     }
-  
+
     var offsets = document.createElement('offsets');
     offsets.setAttribute('xml_i', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
     offsets.setAttribute('xml_f', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
