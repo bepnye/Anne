@@ -171,29 +171,31 @@
         <div id="page-content-wrapper">
 			<div class="section container-fluid" id="task">
 			<h2>Task</h2>
-			<p>The goal of this task is to read a full-text medical journal article and extract information about which treatments were studied and how they were evaluated. There are three components to this task:</p>
-			<ul>
-				<li>Highlight all occurences of each <span class="hl i">intervention</span> that was studied, what was used as a <span class="hl i">comparator</span>, and which <span class="hl o">outcomes</span> were measured for this comparison.</li>
-				<li>Group the highlighted spans together based on which spans refer to exactly the same <span class="hl i">treatment</span> or <span class="hl o">outcome</span>.</li>
-        <li>Go through the previously extracted annotations for the article and assign them to the relevant groups.</li>
-			</ul>
+			<p>The goal of this task is to read a full-text medical journal article and identify any text that indicates one of the <span class="hl i">interventions</span> or <span class="hl i">comparators</span> (collectively called <span class="hl i">treatments</span>) employed in this study, or one of the <span class="hl o">outcomes</span> that was used for evaluation.</p>
+			<p>The final output of the task will be a collection of all of the <span class="hl i">treatments</span> and <span class="hl o">outcomes</span> that were used in the study, and for each one you will provide an <b>exhaustive list</b> of every time that item was mentioned in the text. The annotation process has three components to it:
+				<ul>
+					<li>For every different <span class="hl i">treatment</span> or <span class="hl o">outcome</span> you find in the article, create a group to assign highlighted snippets to.</li>
+					<li>Highlight <b>every</b> occurence of a studied <span class="hl i">treatment</span> or <span class="hl o">outcome</span> and assign it to the relevant group.</li>
+			        <li>Go through the previously extracted annotations for the article and assign them to the relevant groups.</li>
+				</ul>
+			</p>
 			</div>
 			<div class="section container-fluid" id="details">
 				<h2>Details: Highlighting</h2>
-				<p>As you read through the article, highlight every span of text you find that represents one of the studied <span class="hl i">treatments</span> or <span class="hl o">outcomes</span>.</p>
+				<p>As you read through the article, highlight every snippet of text you find that represents one of the studied <span class="hl i">treatments</span> or <span class="hl o">outcomes</span>.</p>
 				<ul>
 					<li>We are only interested in the <span class="hl i">treatments</span> and <span class="hl o">outcomes</span> that are actively evaluated in this particular article.</li>
-					<li>Keep the highlighted text as short as possible while including any details that are specific to that span.</li>
-          <li>Try to include details that differentiate the span from other similar but clinically different spans in the document (such as any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>).</li>
-					<li>If multiple distinct concepts are listed in a row, highlight them individually.</li>
-					<li>For <b>complex interventions</b> that involve multiple <span class="hl i">treatments</span>, include as much of full intervention strategy as you can in the highlighted span.</li>
+					<li>Keep the highlighted text as short as possible while including any details that are specific to that snippet.</li>
+			        <li>Try to include details that differentiate the snippet from other similar but clinically different snippets in the document (such as any <b>dosages</b> that go with the <span class="hl i">treatments</span>, and any <b>endpoints</b> that go with the <span class="hl o">outcomes</span>).</li>
+					<li>If multiple distinct concepts are listed in a row (such as a list of outcomes), highlight them individually.</li>
+					<li>For <b>complex interventions</b> that involve multiple <span class="hl i">treatments</span>, include as much of the full intervention strategy as you can in the highlighted snippet.</li>
 				</ul>
 
 				<h2>Details: Grouping</h2>
-				<p>After highlighting each span, group it together with other spans you've already highlighted that are <b>semantically equivalent</b>. In other words, all of the spans within a single group should represent the same clinical concept and be interchangable in the context of this article. If you don't already have a group that fits the highlighted span, create a new group for it.</p>
+				<p>After highlighting each snippet, group it together with other snippets you've already highlighted that are <b>semantically equivalent</b>. In other words, all of the snippets within a single group should represent the same clinical concept and be interchangable in the context of this article. If you don't already have a group that fits the highlighted snippet, create a new group for it.</p>
 				<ul>
-					<li>When deciding how to group spans, ignore any syntactic differences such as verb tense or pluralization.</li>
-					<li>If the highlighted span is a <b>general term</b> that refers to several existing groups, place it in its own group. For example, <span class="hl o">adverse effects</span> would belong in a different group than <span class="hl o">headache</span> or <span class="hl o">nausea</span>.</li>
+					<li>When deciding how to group snippets, ignore any syntactic differences such as verb tense or pluralization.</li>
+					<li>If the highlighted snippet is a <b>general term</b> that refers to several existing groups, place it in its own group. For example, <span class="hl o">adverse effects</span> would belong in a different group than <span class="hl o">headache</span> or <span class="hl o">nausea</span>.</li>
 					<li>When creating a group, you can pick any name you like - the names are only to help faciliate the annotation process.
 				</ul>
 			</div>
@@ -208,22 +210,29 @@
 				<p>The annotation interface containes three main components:</p>
 				<ul>
 					<li><b>Article Tabs</b>: each full-text article is broken up in to sections. Click on a tab to load that section for highlighting.</li>
-					<li><b>Tab Content</b>: this displays the text content of the current section. This is where you will highlight the relevant text spans.</li>
+					<li><b>Tab Content</b>: this displays the text content of the current section. This is where you will highlight the relevant text snippets.</li>
 					<li><b>Created Groups</b>: creating a new group will add a tab here that you can use to navigate between them.</li>
-					<li><b>Highlighted Spans</b>: each span you add to the selected group will be collected in this area for you to reference.</li>
+					<li><b>Highlighted snippets</b>: each snippet you add to the selected group will be collected in this area for you to reference.</li>
 				</ul>
+				<h3 id="example">Automatic Suggestions</h3>
+				<p>Due to the repetitive nature of this task, we have implemented a feature to help reduce the amount of simple highlighting you need to do. When you highlight a snippet and add it to a group, the interface will <b>automatically pre-highlight</b> all other instances of that snippet throughout the article. These suggested snippets are <b>not added until you confirm them</b> by hovering over them using the popup menu to either confirm (✓) or discard (𐄂) each snippet.</p>
+				<div class="img">
+			  		<img src="https://i.imgur.com/ptI0Rlx.png" title="suggestions" />
+				</div>
+				<p>Please be careful when using this feature, and discard and re-highlight any instances where the suggested span is not correct. For example if you highlight "<b><span class="hl o">heel pain</span></b>", you may then encounter a sentence that includes the suggested snippet "<b>plantar <span class="hl o" style="border: 1px dashed; border-color: #ffa200;">heel pain</span></b>". In this situation you would need to discard the suggestion so that you can highlight the complete outcome, "<b><span class="hl o">plantar heel pain</span></b>".</p>
+
 				<h3 id="example">Example</h3>
 				<p>Here is an example of what the interface looks like during the annotation process. You can see how the different <span class="hl o">outcomes</span> have been divided in to different groups.</p>
 				<div class="img">
 			  		<img src="https://i.imgur.com/V1f5pgX.png" title="example" />
 				</div>
-        <ol>
-          <li>The first mention of <span class="hl o">'first-step' pain</span> includes extra detail about how the outcome is specified.</li>
-          <li><span class="hl o">Foot pain</span> is similar to <span class="hl o">'first-step' pain</span>, but is not interchangeable in this trial and is assigned to a new group.</li>
-          <li>The second mention of <span class="hl o">'first-step' pain</span> includes a specific endpoint, but since only one <b>endpoint</b> is measured in this trial this mention is semantically equivalent to the first.</li>
-          <li>The first <span class="hl i">treatment</span> mentioned is a <b>complex intervention</b>, so we highlight the entire span as a single mention.</li>
-          <li>Subsequent references to the <span class="hl i">low-Dye taping and sham ultrasound</span> intervention don't explicitly include the complete intervention, but in the context of this article they refer to the same intervention and are assigned to the same group.</li>
-        </ol>
+		        <ol>
+		          <li>The first mention of <span class="hl o">'first-step' pain</span> includes extra detail about how the outcome is specified.</li>
+		          <li><span class="hl o">Foot pain</span> is similar to <span class="hl o">'first-step' pain</span>, but is not interchangeable in this trial and is assigned to a new group.</li>
+		          <li>The second mention of <span class="hl o">'first-step' pain</span> includes a specific endpoint, but since only one <b>endpoint</b> is measured in this trial this mention is semantically equivalent to the first.</li>
+		          <li>The first <span class="hl i">treatment</span> mentioned is a <b>complex intervention</b>, so we highlight the entire snippet as a single mention.</li>
+		          <li>Subsequent references to the <span class="hl i">low-Dye taping and sham ultrasound</span> intervention don't explicitly include the complete intervention, but in the context of this article they refer to the same intervention and are assigned to the same group.</li>
+		        </ol>
 
 			</div>
 
@@ -233,13 +242,13 @@
 				<div class="img">
 					<img src="https://i.imgur.com/A5yl3Fz.png" title="source: imgur.com" />
 				</div>
-				<p>Assign each of these spans to the relevant group by clicking on it and then adding it. Once you have assigned all of the provided annotations, you may submit the article.</p>
+				<p>Assign each of these snippets to the relevant group by clicking on it and then adding it. Once you have assigned all of the provided annotations, you may submit the article.</p>
 		  	</div>
 		  	<div class="section container-fluid" id="controls">
 		  		<p>Use the following keybindings to facilitate annotation:</p>
 		  		<ul>
-		  			<li><b>s</b>: add highlighted/selected span to current group</li>
-		  			<li><b>e/&lt;del&gt;</b>: remove selected span</li>
+		  			<li><b>s</b>: add highlighted/selected snippet to current group</li>
+		  			<li><b>e/&lt;del&gt;</b>: remove selected snippet</li>
 		  			<li><b>g</b>: create new group</li>
 		  			<li><b>d</b>: delete current group</li>
 		  			<li><b>t</b>: show Treatment groups</li>

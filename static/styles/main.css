@@ -79,6 +79,7 @@ label {
 }
 
 .highlight.unassigned {
+  font-weight: normal;
   border: 2px dashed;
   border-color: #ffa200;
 }

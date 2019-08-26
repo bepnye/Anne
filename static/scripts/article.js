@@ -851,7 +851,7 @@ function moveSpan(span) {
     span.removeAttribute('source-span-id');
     $(span).popover('dispose');
 
-    if ($('.highlight.unassigned').length == 0) {
+    if ($('.highlight.supplied_ico.unassigned').length == 0) {
       $('#submit').prop('disabled', false);
     }
   }
@@ -1069,7 +1069,6 @@ function addPopover(node) {
   $(node).on('mouseenter', function() {
 		var _this = this;
 		$(this).popover('show');
-    return;
 		$('.popover').on('mouseleave', function () {
 				$(_this).popover('hide');
 		});
@@ -1077,7 +1076,6 @@ function addPopover(node) {
 
 	$(node).on('mouseleave', function () {
     var _this = this;
-    return;
     setTimeout(function () {
       if (!$('.popover:hover').length) {
         $(_this).popover('hide');
