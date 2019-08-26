@@ -67,15 +67,6 @@ label {
 	border-color: #cbd5e8;
 }
 
-.temp-highlight {
-  background: #FFDD33;
-  font-weight: bold;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  padding-left: 2px;
-  padding-right: 2px;
-}
-
 .highlight {
   font-weight: bold;
   border: 2px solid transparent;
@@ -87,14 +78,9 @@ label {
 .highlight.assigned {
 }
 
-.highlight-i.unassigned {
-  background: #f0e8e6;
-  border-color: #b3e2cd;
-}
-
-.highlight-o.unassigned {
-  background: #f0e8e6;
-  border-color: #cbd5e8;
+.highlight.unassigned {
+  border: 2px dashed;
+  border-color: #ffa200;
 }
 
 .highlight.active {
@@ -112,6 +98,11 @@ label {
 }
 .highlight-o {
   background: #cbd5e8;
+}
+
+.highlight-suggestion {
+  background: #fcf5e1;
+  border-color: #ffc53b;
 }
 
 .buttons {
@@ -226,4 +217,22 @@ body {
 
 .nav-groups {
   min-height: 42px;
+}
+
+.popover-button {
+  margin: 4px;
+  padding: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.popover-title {
+  display: none;
+}
+
+.popover-body {
+  padding: 0px;
+}
+
+.popover {
+  margin-bottom: 0px;
 }

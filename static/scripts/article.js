@@ -1,5 +1,5 @@
 "use-strict";
-globalId = 0;
+_globalId = 0;
 
 _curE = null;
 _curGroup = null;
@@ -117,14 +117,13 @@ function delGroup() {
 }
 
 function createGroup(groupName) {
-  console.log('adding for', e);
-
   if (groupName == null) {
     groupName = prompt("Enter group name:", "...");
     if (groupName == null) {
       return;
     }
   }
+  console.log('adding group: ', groupName);
 
   var e = _curE;
 
@@ -158,7 +157,6 @@ function createGroup(groupName) {
   tabContents.appendChild(newContent);
 
   setTabIndices();
-  console.log(e, tabIdx);
 
   showGroup(e, tabIdx);
   setArticleHeight();
@@ -244,11 +242,19 @@ function getInterveningNodes(startNode, endNode) {
     return rangeNodes;
 }
 
-function createHighlight(suffix, spanId) {
+function createHighlight(hlTypes, spanId) {
   var wrapper = document.createElement('span');
-  wrapper.classList.add('highlight', 'highlight-'+suffix);
+  wrapper.classList.add('highlight');
+  hlTypes.forEach(hlType => {
+    wrapper.classList.add(hlType);
+  });
+  wrapper.setAttribute('source-span-id', spanId);
+  if (document.getElementById(spanId)) {
+    addPopover(wrapper);
+    spanId = getNewGlobalId();
+  }
   // add the id as a class for easy jQuery selections
-  // and as an attribute for easy js lookups
+  //  then as an attribute for easy js lookups
   wrapper.classList.add('span-'+spanId);
   wrapper.setAttribute('span-id', spanId);
   return wrapper;
@@ -262,7 +268,16 @@ function createOffset(text, i, f) {
   return node;
 }
 
-function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, suffix, spanId) {
+function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, hlTypes, spanId) {
+  console.log(selectedNodes, selectedTxtI, selectedTxtF, hlTypes, spanId);
+  var labeledNodes = selectedNodes.filter(
+      n => n.parentNode.classList.contains('highlight') ||
+      n.parentNode.parentNode.classList.contains('highlight'));
+  if (labeledNodes.length > 0) {
+    alert('Cannot overwrite existing highlight!');
+    return false;
+  }
+
   var textNodes = selectedNodes.filter(n => n.nodeType == Node.TEXT_NODE);
 	$.each(textNodes, function (n, node) {
     var offsetNode = node.parentNode;
@@ -289,7 +304,7 @@ function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, suffix, spanId
         var txt_f = spanTxtI + chunkF;
         chunkNode = createOffset(chunkText, txt_i, txt_f);
         if (nChunk == 1) { // highlighted section
-          var highlight = createHighlight(suffix, spanId);
+          var highlight = createHighlight(hlTypes, spanId);
           highlight.appendChild(chunkNode);
           textNodes[n] = chunkNode;
           offsetNodeContainer.insertBefore(highlight, offsetNode);
@@ -322,22 +337,6 @@ function getSelectedText() {
     return text;
 }
 
-/**
-* Check that the string is already highlighted.
-*
-* @param highlighted represents that the user wants to add to the highlighted list.
-*/
-function isAlreadyHighlighted(highlighted) {
-    var highlights = getFinalText();
-    for (var i = 0; i < highlights.length; i++) {
-        if (highlights[i].includes(highlighted)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 function checkSpanOffset(node, targetOffset) {
   var text_i = parseInt(node.getAttribute('xml_i'));
   var text_f = parseInt(node.getAttribute('xml_f'));
@@ -348,7 +347,7 @@ function checkSpanOffset(node, targetOffset) {
   }
 }
 
-function addFromOffsets(startOffset, endOffset, text, suffix) {
+function addFromOffsets(startOffset, endOffset, text, hlTypes) {
   var startNode = null;
   var endNode = null;
   $.each(document.getElementsByTagName('offsets'), function(n, node) {
@@ -368,7 +367,7 @@ function addFromOffsets(startOffset, endOffset, text, suffix) {
     startNode = startNode.firstChild;
     endNode = endNode.firstChild;
     var selectedNodes = getInterveningNodes(startNode, endNode);
-    add(selectedNodes, startOffset, endOffset, text, suffix);
+    add(selectedNodes, startOffset, endOffset, text, hlTypes);
   } else {
     console.log('Unable to find start/end nodes to highlight text');
     console.log(textStartOffset, textEndOffset);
@@ -380,17 +379,12 @@ function addFromHighlight() {
   window.getSelection().removeAllRanges();
 
   if (highlighted === "") {
-    return "error";
+    return -1;
   }
 
   if (!_curE || !_curGroup) {
     alert('Create a group first');
-    return "error";
-  }
-
-  if (isAlreadyHighlighted(highlighted) === true) {
-      $("#warning").append("<p>Text has already been selected.</p>")
-      return;
+    return -1;
   }
 
   var selectedNodes = getInterveningNodes(range.startContainer, range.endContainer);
@@ -404,12 +398,13 @@ function addFromHighlight() {
   var endSpanOffset = parseInt(endNode.parentNode.getAttribute('xml_i'));
   var endOffset = range.endOffset + endSpanOffset;
 
-  add(selectedNodes, startOffset, endOffset, highlighted, _curE);
+  var globalId = add(selectedNodes, startOffset, endOffset, highlighted, _curE);
+  return globalId;
 }
 
 function getNewGlobalId() {
-  globalId += 1;
-  return globalId;
+  _globalId += 1;
+  return _globalId;
 }
 
 function findAncestor (el, cls) {
@@ -425,7 +420,6 @@ function findAncestor (el, cls) {
 function highlightClick(e) {
   console.log(e.target);
   var spanId = e.target.parentNode.getAttribute('span-id');
-  console.log(spanId);
   if (e.target.parentNode.classList.contains('unassigned')) {
     $('.highlight.active').removeClass('active');
     $(e.target.parentNode).addClass('active');
@@ -473,32 +467,26 @@ async function radioChange(e) {
 /**
 * Add the text to the on-going list.
 */
-function add(selectedNodes, startOffset, endOffset, highlighted, suffix) {
+function add(selectedNodes, startOffset, endOffset, highlighted, eType) {
+  
   var globalId = getNewGlobalId();
+  textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, ['highlight-'+eType], globalId);
+  if (textNodes) {
+    var startNode = textNodes[0];
+    var endNode = textNodes[textNodes.length - 1];
 
-  console.log(selectedNodes);
-  console.log(selectedNodes.map(n => n.parentNode));
-  var labeledNodes = selectedNodes.filter(n => n.parentNode.classList.contains('highlight') || n.parentNode.parentNode.classList.contains('highlight'));
-  if (labeledNodes.length > 0) {
-    alert('Cannot overwrite existing highlight!');
-    return false;
+    var txtStart = -1;
+    var txtEnd = -1;
+    try {
+      txtStart = parseInt(startNode.getAttribute('xml_i'));
+      txtEnd = parseInt(endNode.getAttribute('xml_f'));
+    } catch {
+      console.log('Unable to find txt start/end info in tag attr');
+      console.log(selectedNodes);
+    }
+    addRadioButton(highlighted, eType, txtStart, txtEnd, globalId);
+    return globalId;
   }
-
-  textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, suffix, globalId);
-
-  var startNode = textNodes[0];
-  var endNode = textNodes[textNodes.length - 1];
-
-  var txtStart = -1;
-  var txtEnd = -1;
-  try {
-    txtStart = parseInt(startNode.getAttribute('xml_i'));
-    txtEnd = parseInt(endNode.getAttribute('xml_f'));
-  } catch {
-    console.log('Unable to find txt start/end info in tag attr');
-    console.log(selectedNodes);
-  }
-  addRadioButton(highlighted, suffix, txtStart, txtEnd, globalId);
 }
 
 function addRadioButton(text, suffix, txtStart, txtEnd, globalId) {
@@ -621,53 +609,30 @@ function getActiveNavTab() {
   return document.getElementsByClassName("show active")[0];
 }
 
-function temp_highlight_all(str_) {
-  var elements = parse_element(document.getElementsByClassName("tab-pane-article"));
-  for (var i = 0; i < elements.length; i++) {
-    var elem = elements[i];
-    var idx  = elem.textContent.indexOf(str_);
-    if (idx >= 0 && elem.textContent.length != str_.length) { // IGNORE THE CASE THAT WE ALREADY DID THUS FAR
-      var range = document.createRange();
-      setSelectionRange(elem, idx, idx + str_.length);
-
-      if (window.getSelection().toString()) {
-        break;
-      } else {
-        var parent = elem;
-        while (parent == null || parent.getAttribute('role') == null || parent.getAttribute('role') != 'tabpanel') {
-          parent = parent.parentElement;
-        }
-
-        var p      = document.getElementById(parent.id.split("-").join("-tab-"));
-        deactivate_tab();
-        p.classList.add("active");
-        parent.classList.add("active");
-        parent.classList.add("show");
-        break;
-      }
+function addSpanSuggestions(span, spanId) {
+  var offsetNodes = document.getElementsByTagName('offsets');
+  console.log(offsetNodes);
+  [].forEach.call(offsetNodes, (node, nodeIdx) => {
+    if (node.getAttribute('xml_i') == '-1' ||
+        node.parentNode.classList.contains('highlight')) {
+      return;
     }
-  }
-
-  temporary_highlight();
-  if (i != elements.length) {
-    temp_highlight_all(str_);
-  }
-
-  deactivate_tab();
+    var spanI = node.textContent.indexOf(span);
+    if (spanI >= 0) {
+      console.log(node);
+      var xmlI = spanI + parseInt(node.getAttribute('xml_i'));
+      wrapNodeTexts([node.firstChild], xmlI, xmlI + span.length, ['highlight-'+_curE, 'unassigned'], spanId);
+    }
+  });
 }
 
 function addSpan() {
-  var cur_tab = getActiveNavTab();
-  if (window.getSelection().toString()) {
-    var str_ = window.getSelection().toString(); // TODO: Do something smart about stripping and lower-casing
-    var ret  = addFromHighlight();
-    if (ret != "error") {
-      temp_highlight_all(str_);
-      deactivate_tab();
-      cur_tab.classList.add("show");
-      cur_tab.classList.add("active");
+  var selectedStr = window.getSelection().toString();
+  if (selectedStr) {
+    var spanId = addFromHighlight();
+    if (spanId > 0) {
+      addSpanSuggestions(selectedStr, spanId);
     }
-
   } else if ($('.highlight.active').length > 0) {
     moveSpan();
   }
@@ -692,9 +657,6 @@ function handleKeyPress (evt) {
   else if (evt.key == "o") {
     showAnnTab('o');
   }
-  else if (isFinite(evt.key)) {
-    showGroup(_curE, evt.key)
-  }
   else if (evt.key == 's') {
     addSpan();
   }
@@ -706,6 +668,9 @@ function handleKeyPress (evt) {
   }
   else if (evt.key == "e" || evt.keyCode == 8 /*backspace*/ || evt.keyCode == 46 /*delete*/) {
     removeSpan();
+  }
+  else if (isFinite(evt.key)) {
+    showGroup(_curE, evt.key);
   }
 }
 
@@ -824,21 +789,26 @@ function removeSpan() {
   if (checkedRadios.length == 1) {
     var span = checkedRadios[0];
     var spanId = span.id;
-    if ($('.span-'+spanId)[0].classList.contains('assigned')) {
+    if ($('.span-'+spanId)[0].classList.contains('supplied_ico')) {
       alert('Cannot delete preloaded spans');
       return;
     }
-    var offsetNodes = $('.span-'+spanId).children();
     checkedRadios[0].parentNode.remove();
-    offsetNodes.unwrap();
-    condenseOffsetNodes(offsetNodes);
+    var hlNodes = $('[source-span-id='+spanId+'],[span-id='+spanId+']');
+    hlNodes.each((i, node) => {
+      console.log(node.children);
+      var offsetNodes = $(node.children);
+      offsetNodes.unwrap();
+      condenseOffsetNodes(offsetNodes);
+    });
   }
 }
 
-function moveSpan() {
-  var span0 = document.getElementsByClassName("highlight active")[0];
-  var spanId = span0.getAttribute('span-id');
-  console.log(spanId);
+function moveSpan(span) {
+  if (span == null) {
+    span = document.getElementsByClassName("highlight active")[0];
+  }
+  var spanId = span.getAttribute('span-id');
 
   if (!_curGroup) {
     alert('No active group to add span to');
@@ -859,9 +829,9 @@ function moveSpan() {
   } else {
     // No corresponding radio div (initially unassigned span)
     var suffix = null;
-    if (span0.classList.contains('highlight-i')) {
+    if (span.classList.contains('highlight-i')) {
       suffix = 'i';
-    } else if (span0.classList.contains('highlight-o')) {
+    } else if (span.classList.contains('highlight-o')) {
       suffix = 'o';
     } else {
       console.log('Not sure what the element of currently active span is!');
@@ -871,12 +841,15 @@ function moveSpan() {
       alert('Wrong group type selected for current span');
       return;
     }
-    span0.classList.remove('unassigned');
-    span0.classList.add('assigned');
-    addRadioButton(span0.firstChild.textContent, suffix,
-        span0.firstChild.getAttribute('xml_i'),
-        span0.firstChild.getAttribute('xml_f'),
+    span.classList.remove('unassigned');
+    span.classList.add('assigned');
+    addRadioButton(span.firstChild.textContent, suffix,
+        span.firstChild.getAttribute('xml_i'),
+        span.firstChild.getAttribute('xml_f'),
         spanId);
+
+    span.removeAttribute('source-span-id');
+    $(span).popover('dispose');
 
     if ($('.highlight.unassigned').length == 0) {
       $('#submit').prop('disabled', false);
@@ -1011,7 +984,7 @@ function appendAnn(div, ann, targetE) {
 
     var globalId = getNewGlobalId();
     var highlight = document.createElement('span');
-    highlight.classList.add('highlight', 'unassigned', 'span-'+globalId);
+    highlight.classList.add('highlight', 'supplied_ico', 'unassigned', 'span-'+globalId);
     highlight.setAttribute('span-id', globalId);
     if (e == 'Outcome') {
       highlight.classList.add('highlight-o');
@@ -1020,8 +993,9 @@ function appendAnn(div, ann, targetE) {
     }
 
     var offsets = document.createElement('offsets');
-    offsets.setAttribute('xml_i', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
-    offsets.setAttribute('xml_f', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
+    offsets.setAttribute('xml_i', '-1');
+    offsets.setAttribute('xml_f', '-1');
+    offsets.setAttribute('ico_txt', ann.Intervention + '|' + ann.Comparator + '|' + ann.Outcome);
     offsets.textContent = ann[e];
 
     highlight.appendChild(offsets);
@@ -1029,4 +1003,85 @@ function appendAnn(div, ann, targetE) {
     div.appendChild(highlight);
     div.innerHTML += '<br/>'
   });
+}
+
+function accept(elem) {
+  var highlighted = elem.textContent;
+  var suffix      = elem.getAttribute('suffix');
+  var txtStart    = elem.children[0].getAttribute('xml_i');
+  var txtEnd      = elem.children[0].getAttribute('xml_f');
+  var globalId    = elem.getAttribute('span-id');
+
+  $(elem).popover('dispose');
+  elem.classList = "";
+  elem.classList.add('highlight', 'highlight-'+suffix);
+  elem.classList.add('span-'+globalId);
+
+  addRadioButton(highlighted, suffix, txtStart, txtEnd, globalId)
+}
+
+function addPopover(node) {
+
+  var template = '<div class="popover" role="tooltip"><div class="popover-body"></div></div>'
+
+  var accept = document.createElement('button');
+  accept.classList.add('close', 'popover-button');
+  accept.innerHTML = '&#10003;';
+  
+  var reject = document.createElement('button');
+  reject.classList.add('close', 'popover-button');
+  reject.innerHTML = '&times;';
+
+  var pop = document.createElement('div');
+  pop.appendChild(accept);
+  pop.appendChild(reject);
+
+  $(node).popover({
+    trigger: 'manual',
+    template: template,
+    offset: '0, 0',
+    placement: 'top',
+    content: pop,
+    delay: { 'show': 0, 'hide': 350 },
+    html: true,
+    sanitize: false,
+  });
+
+  $(accept).on('click', function () {
+    $(node).popover('dispose');
+    var radio = document.getElementById('radio-'+node.getAttribute('source-span-id'));
+    var e = radio.getAttribute('element');
+    var group = radio.getAttribute('group');
+    showGroup(e, group);
+    // async problem - don't want to wait for shown.bs.tab event to fire in order to set vars
+    _curE = e;
+    _curGroup = group;
+    moveSpan(node);
+  });
+  
+  $(reject).on('click',  function () {
+    $(node).popover('dispose');
+    var offsetNodes = $(node.children);
+    offsetNodes.unwrap();
+    condenseOffsetNodes(offsetNodes);
+  });
+
+  $(node).on('mouseenter', function() {
+		var _this = this;
+		$(this).popover('show');
+    return;
+		$('.popover').on('mouseleave', function () {
+				$(_this).popover('hide');
+		});
+	});
+
+	$(node).on('mouseleave', function () {
+    var _this = this;
+    return;
+    setTimeout(function () {
+      if (!$('.popover:hover').length) {
+        $(_this).popover('hide');
+      }
+    }, 200);
+	});
 }
