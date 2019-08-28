@@ -269,7 +269,6 @@ function createOffset(text, i, f) {
 }
 
 function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, hlTypes, spanId) {
-  console.log(selectedNodes, selectedTxtI, selectedTxtF, hlTypes, spanId);
   var labeledNodes = selectedNodes.filter(
       n => n.parentNode.classList.contains('highlight') ||
       n.parentNode.parentNode.classList.contains('highlight'));
@@ -611,7 +610,6 @@ function getActiveNavTab() {
 
 function addSpanSuggestions(span, spanId) {
   var offsetNodes = document.getElementsByTagName('offsets');
-  console.log(offsetNodes);
   [].forEach.call(offsetNodes, (node, nodeIdx) => {
     if (node.getAttribute('xml_i') == '-1' ||
         node.parentNode.classList.contains('highlight')) {
@@ -619,7 +617,6 @@ function addSpanSuggestions(span, spanId) {
     }
     var spanI = node.textContent.indexOf(span);
     if (spanI >= 0) {
-      console.log(node);
       var xmlI = spanI + parseInt(node.getAttribute('xml_i'));
       wrapNodeTexts([node.firstChild], xmlI, xmlI + span.length, ['highlight-'+_curE, 'unassigned'], spanId);
     }
@@ -711,6 +708,7 @@ function submit() {
   var userid = document.getElementById("userid").innerHTML;
   var id = document.getElementById("id").innerHTML;
   var pid = document.getElementById("pid").innerHTML;
+  var ann_type = document.getElementById("ann_type").innerHTML;
 
   var corefs = { 'i': {}, 'o': {} };
   var groupTabs = Array.from(document.getElementsByClassName('nav-inner'));
@@ -737,7 +735,7 @@ function submit() {
   });
 
   console.log('submitted!', pid);
-  post("/submit/", {"userid": userid, "id": id, "pid": pid, "corefs": JSON.stringify(corefs)});
+  post("/submit/", {"userid": userid, "ann_type": ann_type, "id": id, "pid": pid, "corefs": JSON.stringify(corefs)});
 }
 
 /**

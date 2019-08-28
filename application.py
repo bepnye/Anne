@@ -30,18 +30,21 @@ def index():
 """
 Start the program.
 """
-@application.route('/start/<userid>/', methods=['GET', 'POST'])
-def start(userid):
+@application.route('/start/<userid>/', defaults={'ann_type':'full'}, methods=['GET', 'POST'])
+@application.route('/start/<userid>/<ann_type>/', methods=['GET', 'POST'])
+def start(userid, ann_type = 'abst'):
     if not(userid in valid_users):
         return flask.render_template('index_invalid_user.html')
         
     id_ = anne.get_next_file(userid)
+
     if not id_:
         return flask.redirect(flask.url_for('finish'))
     else:
-        return flask.redirect(flask.url_for('annotate_full', 
+        return flask.redirect(flask.url_for('annotate_article', 
                                             userid = userid, 
-                                            id_ = id_))
+                                            id_ = id_,
+                                            ann_type = ann_type))
                 
 """
 Start the program, but show the error to the user first.
@@ -56,62 +59,73 @@ def invalid_user():
     if not id_:
         return flask.redirect(flask.url_for('finish'))
     else:
-        return flask.redirect(flask.url_for('annotate_abstract', 
+        return flask.redirect(flask.url_for('annotate_article', 
                                             userid = userid, 
-                                            id_ = id_))
+                                            id_ = id_,
+                                            ann_type = 'full'))
 
-"""
-Display just the abstract.
-"""    
-@application.route('/annotate_abstract/<userid>/<id_>/', methods=['GET'])
-def annotate_abstract(userid, id_ = None):
-    if id_ is None:
-        art = anne.get_next_article(userid)
-    else:
-        art = anne.get_next_article(userid, id_)
-    
-   
-    if not art:
-        return flask.redirect(flask.url_for('finish'))
-    else:
-        save_last_path(userid, art.get_extra()['path'])
-        return flask.render_template('article.html',
-                                     userid = userid,
-                                     id = art.id_,
-                                     pid = id_,
-                                     tabs = json.dumps(art.text),
-                                     xml_file = art.get_extra()['path'],
-                                     outcome = art.get_extra()['outcome'],
-                                     intervention = art.get_extra()['intervention'],
-                                     comparator = art.get_extra()['comparator'],
-                                     options = config.options_full)
+def get_abst_end(art):
+  abst_end = art.abstract
+  # recurse in to subsecs until we hit the last string of the last sec
+  while type(abst_end) != str:
+    abst_end = abst_end[-1]
+
+  tag_idx = abst_end.index('xml_f')
+  value_i = abst_end.index('=', tag_idx) + 2 # leading +"
+  value_f = abst_end.index(' ', tag_idx) -1 # trailing "
+  value = int(abst_end[value_i:value_f])
+  return value
+
+def get_ico_anns(art, id_, abst_only = False):
+  ICO = ['Intervention', 'Comparator', 'Outcome']
+  anns = [a for idx, a in all_anns.iterrows()]
+  anns = [a for a in anns if str(a.RowID) == id_.replace('PMC', '')]
+
+  if abst_only:
+    abst_f = get_abst_end(art)
+    abst_anns = []
+    for a in anns:
+      try:
+        if int(a.xml_offsets.split(':')[1]) <= abst_f:
+          abst_anns.append(a)
+      except ValueError:
+        pass
+    anns = abst_anns
+
+  icos = [[a[e] for e in ICO] for a in anns]
+  unique_icos = set(map(tuple, icos))
+  return [dict(zip(ICO, ico)) for ico in unique_icos]
 
 """
 Grabs a specified article and displays the full text.
 """                             
-@application.route('/annotate_full/<userid>/<id_>/', methods=['GET'])
-def annotate_full(userid, id_ = None):
+@application.route('/annotate_article/<ann_type>/<userid>/<id_>/', methods=['GET'])
+def annotate_article(userid, id_, ann_type):
   if id_ is None:
       art = anne.get_next_article(userid)
   else:
       art = anne.get_next_article(userid, id_)
 
+  if ann_type == 'abst':
+    abst_only = True
+    tabs = art.text[0:1]
+  else:
+    abst_only = False
+    tabs = art.text
+
+  anns = get_ico_anns(art, id_, abst_only)
+
   if not art:
     return flask.redirect(flask.url_for('finish'))
-    
-  ICO = ['Intervention', 'Comparator', 'Outcome']
-  icos = [[a[e] for e in ICO] for idx, a in all_anns.iterrows() \
-      if str(a.RowID) == id_.replace('PMC', '')]
-  unique_icos = set(map(tuple, icos))
-  anns = [dict(zip(ICO, ico)) for ico in unique_icos]
 
   save_last_path(userid, art.get_extra()['path'])
-  return flask.render_template('full_article.html',
+  return flask.render_template('annotate_article.html',
+                               ann_type = ann_type,
                                userid = userid,
                                annotations = anns,
                                id = art.id_,
                                pid = id_,
-                               tabs = art.text,
+                               tabs = tabs,
                                xml_file = get_last_path(userid),
                                outcome = art.get_extra()['outcome'],
                                intervention = art.get_extra()['intervention'],
@@ -123,13 +137,10 @@ Grabs a specified article and displays the full text.
 """                             
 @application.route('/browse/<userid>/<id_>/', methods=['GET'])
 def browse(userid, id_ = None):
-    try:
-        if id_ is None:
-            art = anne.get_next_article(userid)
-        else:
-            art = anne.get_next_article(userid, id_)
-    except:
-        return annotate_abstract(userid, id_)
+    if id_ is None:
+        art = anne.get_next_article(userid)
+    else:
+        art = anne.get_next_article(userid, id_)
     
     if not art:
         return flask.redirect(flask.url_for('finish'))
@@ -157,10 +168,14 @@ def submit():
     anne.submit_annotation(flask.request.form)
 
     id_ = anne.get_next_file(userid)
+    ann_type = flask.request.form['ann_type']
     if not id_:
         return flask.redirect(flask.url_for('finish'))
     else:
-      return flask.redirect(flask.url_for('annotate_full', userid = userid, id_ = id_))
+      return flask.redirect(flask.url_for('annotate_article',
+                                          userid = userid,
+                                          id_ = id_,
+                                          ann_type = ann_type))
 
 """
 Only go to this if there are no more articles to be annotated.

@@ -121,7 +121,6 @@ class XMLReader(Reader):
     will pick one and then return the name of it.
     """
     def _get_next_file(self, user):
-        print('helloooooo')
         fname = 'data/{}.progress'.format(user)
         if not os.path.isfile(fname):
           with open(fname, 'w') as fout:
@@ -214,7 +213,6 @@ class XMLReader(Reader):
         abst_info = self._get_sections(abst_xml)
         if abst_info[0] == '':
           abst_info[0] = { 'text': 'Abstract', 'html': 'Abstract' }
-        print(abst_info)
         return abst_info
 
     def _get_body(self, body):
@@ -240,6 +238,7 @@ class XMLReader(Reader):
 
         # store the path of this file
         art = article.Article(id_= id_, title=title, text=text)
+        art.abstract = abstract
         art.get_extra()['path'] = next_file
                 
         file_data = self.file_description.get(str(id_), [])
@@ -272,7 +271,6 @@ class XMLReader(Reader):
           return None
 
         path_to_file =  self.path + '/' + str(next_file) + '.html' # the path to XML files
-        print('Parsing:', path_to_file)
         et = ET.parse(path_to_file) 
         root = et.getroot() 
         
