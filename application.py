@@ -18,9 +18,7 @@ anne = annotator.Annotator(reader.get_reader(config.reader)(**config.reader_para
                            writer.get_writer(config.writer)(**config.writer_params))
 
 valid_users = np.loadtxt('usernames.txt', delimiter = ',', dtype = 'str')
-model_annotations = json.load(open('data/model_annotations.json'))
-
-all_anns = pd.read_csv('out_fernando.csv');
+all_anns = pd.read_csv('data/exhaustive_ico.csv');
 
 """
 Display the main page.
@@ -101,13 +99,11 @@ def annotate_full(userid, id_ = None):
   if not art:
     return flask.redirect(flask.url_for('finish'))
     
-  anns = [];
-  for idx, a in all_anns.iterrows():
-    if str(a['RowID']) == id_.replace('PMC', ''):
-      data = { 'idx': idx }
-      for k in ['Intervention', 'Comparator', 'Outcome']:
-        data[k] = a[k]
-      anns.append(data)
+  ICO = ['Intervention', 'Comparator', 'Outcome']
+  icos = [[a[e] for e in ICO] for idx, a in all_anns.iterrows() \
+      if str(a.RowID) == id_.replace('PMC', '')]
+  unique_icos = set(map(tuple, icos))
+  anns = [dict(zip(ICO, ico)) for ico in unique_icos]
 
   save_last_path(userid, art.get_extra()['path'])
   return flask.render_template('full_article.html',
@@ -184,7 +180,7 @@ def results():
 Get the last path.
 """
 def get_user_progress_fname(user):
-  return 'data/{}_progress.txt'.format(user)
+  return 'data/{}_cur_fname.txt'.format(user)
 
 def get_last_path(user):
   return open(get_user_progress_fname(user)).read()

@@ -121,13 +121,14 @@ class XMLReader(Reader):
     will pick one and then return the name of it.
     """
     def _get_next_file(self, user):
+        print('helloooooo')
         fname = 'data/{}.progress'.format(user)
         if not os.path.isfile(fname):
           with open(fname, 'w') as fout:
             fout.write('0')
 
         n = int(open(fname).read())
-        ids = [l.strip() for l in open('data/ordering_list.txt').readlines()]
+        ids = [l.strip() for l in open('data/order_{}.txt'.format(user)).readlines()]
         if n < len(ids):
           return ids[n]
         return None
@@ -191,6 +192,10 @@ class XMLReader(Reader):
             section_title = { 'text': node.text, 'html': node.text }
           elif len(node) == 1:
             section_title = { 'text': node[0].text, 'html': ET.tostring(node[0]).decode() }
+          else:
+            section_title = {
+              'text': ET.tostring(node, method = 'text').decode(),
+              'html': ET.tostring(node).decode() }
         else:
           section_content.append(ET.tostring(node).decode())
       return [section_title, section_content]
@@ -209,12 +214,17 @@ class XMLReader(Reader):
         abst_info = self._get_sections(abst_xml)
         if abst_info[0] == '':
           abst_info[0] = { 'text': 'Abstract', 'html': 'Abstract' }
+        print(abst_info)
         return abst_info
 
     def _get_body(self, body):
-        body_sections = self._get_sections(body)
-        # We don't need the title for the top "body" node
-        return body_sections[1]
+        # We don't need the title for the top "body" node, only store the "section_info"
+        body_sections = self._get_sections(body)[1]
+        for i, sec in enumerate(body_sections):
+          # ack, caught a section with no title - would jack up the nav tabs
+          if type(sec) == str:
+            body_sections[i] = [{'text': 'No Title', 'html': 'No Title'}, [sec]]
+        return body_sections
 
     """
     Initialize the article to have the proper fields and extra information.

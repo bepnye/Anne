@@ -960,7 +960,6 @@ function addTabContent(div, heading, content, level = 0) {
 function addAnns(annotations) {
   var container = document.getElementById('nav-anns');
   var divMap = new Map();
-  console.log(annotations);
   annotations.forEach(a => {
     var k = a.Intervention + '|' + a.Comparator;
     var annDiv = null;
@@ -970,6 +969,7 @@ function addAnns(annotations) {
       div.classList.add('ann-row');
       container.appendChild(div);
       divMap.set(k, div);
+      // for the first frame, include the I+C instead of just O
       targetE = ['Intervention', 'Comparator', 'Outcome'];
     }
     appendAnn(divMap.get(k), a, targetE);

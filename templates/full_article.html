@@ -24,6 +24,7 @@
     */
     $(document).ready( function() {
       var tabs = {{ tabs|tojson }};
+      console.log(tabs);
       $.each(tabs, function(nTab, tab) {
         var title = tab[0];
         var content = tab[1];
@@ -32,6 +33,7 @@
       });
 
       var anns = {{ annotations|safe }};
+      console.log(anns);
       addAnns(anns);
 
       bindEvents();
