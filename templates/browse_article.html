@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <head>
+    <title>Medical Annotation</title>
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="-1">
     <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/main.css') }}">
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='scripts/post.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/article.js') }}"></script>
-    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-  </head>
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/main.css') }}">
 
   <script>
     /**
@@ -23,162 +24,94 @@
     */
     $(document).ready( function() {
       var tabs = {{ tabs|tojson }};
+      console.log(tabs);
       $.each(tabs, function(nTab, tab) {
         var title = tab[0];
         var content = tab[1];
-        var div = document.getElementById(title);
+        var div = document.getElementById('nav-'+nTab);
         addTabContent(div, title, content);
       });
-      // add functions to the buttons
 
-      tablinks = document.getElementsByClassName("tablinks"); // get all the tab headers
-      tablinks[0].click();
+      var rawText = {{ text|tojson }};
+      var anns = {{ anns|tojson }};
+      addAnnsFromOffsets(anns, rawText);
 
-      var spans = {{ spans|tojson }};
-      console.log(spans);
-      $.each(spans['interventions'], function(n, s) { addFromTextOffsets(s['i'], s['f'], s['text'], 'i'); });
-      $.each(spans['participants'], function(n, s) { addFromTextOffsets(s['i'], s['f'], s['text'], 'p'); });
-      $.each(spans['outcomes'], function(n, s) { addFromTextOffsets(s['i'], s['f'], s['text'], 'o'); });
+      bindEvents('browse');
+
+      $('#nav-tab-0').tab('show');
+      showGroup(anns[0].group, '1');
+
+      setArticleHeight();
+      $(window).resize(function() {
+        clearTimeout(window.resizedFinished);
+        window.resizedFinished = setTimeout(function(){
+          setArticleHeight();
+        }, 250);
+      });
     });
   </script>
 
 </head>
 <body>
+	<div class="body-container">
+		<div class="article-container">
+			<nav class="nav nav-tabs" id="nav-tabs-article" role="tablist">
+					{% for tab in tabs %}
+						{% set key = loop.index0 %}
+						<a class="nav-item nav-link" id="nav-tab-{{ key }}" data-toggle="tab" href="#nav-{{ key }}">{{ tab[0].text }}</a>
+					{% endfor %}
+			</nav>
 
-  <!-- Initialize the tab with titles . -->
-  <div style = "margin-bottom:10px;">
-    <div id="tab-buttons-div" class = "tab">
-      {% for tab in tabs %}
-        <button id = 'link_{{ tab[0] }}' class="tablinks" onclick="openTab(event, '{{ tab[0] }}')">{{ tab[0] }}</button>
-      {% endfor %}
+			<div class="tab-content tab-content-article" id="tab-contents-article">
+				{% for tab in tabs %}
+					{% set key = loop.index0 %}
+					<div id='nav-{{ key }}' class="tab-pane fade tab-pane-article" role="tabpanel">
+					</div>
+				{% endfor %}
+          <div id='nav-anns' class="tab-pane fade tab-pane-article" role="tabpanel">
+			</div>
+		</div>
 
-    </div>
+		<div id="annotation-container" class="annotation-container">
+			<div class="d-flex flex-row">
+				<nav class="nav nav-tabs nav-tabs-left flex-column" id="nav-tabs-ico" role="tablist">
+					<!--<a style="height: 42px; border: 1px solid white;">-->
+          {% for a in anns %}
+          <a class="nav-link-left nav-link" id="nav-tab-{{ a.group }}" data-toggle="tab" href="#nav-{{ a.group }}">{{ a.group }}</a>
+          {% endfor %}
+          <a style="flex: 1;"></a>
+          <button type="button" id="submit" class="btn btn-success btn-group" disabled>
+            <div style="width: 100%;">Submit</div>
+          </button>
+				</nav>
 
-    <!-- Create a place to put content for each tab. -->
-    {%for tab in tabs %}
-      <div id = '{{ tab[0] }}', class="tabcontent" style = "height: 300px; overflow: auto;">
-      </div>
-    {% endfor %}
-  </div>
+				<div class="tab-content tab-content-ico" id="tab-contents-ico">
 
-    <!--
-    Create a row where the first component displays the reported
-    outcome/comparator/intervention, and the second part asks
-    the user which of these "options" is true.
-    -->
-    <div class = "container-fluid" style = "margin-left: 15px; margin-top: 5px;">
-      <div class = "row" style = "text-align: center; margin-top: 10px; margin-bottom: 10px;">
-        Text spans generate by best model from <a href="http://pico-extraction.ebm-nlp.com/" target="_blank">EBM-NLP</a>
-      </div>
-    </div>
+          {% for a in anns %}
+          <div id="nav-{{ a.group }}" class="tab-pane fade" role="tabpanel">
+            <nav class="nav nav-tabs nav-groups" id="nav-tabs-{{ a.group }}" role="tablist">
+            </nav>
 
-    <!-- Prompt to ask user to fill out information -->
-    <div class = "container-fluid" style = "margin-left: 15px; margin-top: 5px;">
-
-      <!-- Selected Text section -->
-      <div class = "col-md-4">
-        <div class="panel panel-default">
-          <!-- Panel heading (aka title) -->
-          <div class="panel-heading">
-            <div>
-              <label><b>Participants</b></label>
+            <div class="tab-content tab-content-group" id="tab-contents-{{ a.group }}">
             </div>
           </div>
+          {% endfor %}
 
-          <!-- Scrollable window where selected-text is displayed -->
-          <div class="panel-body" id="panel-i" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
-              <div id="selected-p" class="selected-spans"> </div>
-          </div>
-        </div>
+				</div>
       </div>
+	</div>
 
-      <div class = "col-md-4">
-        <div class="panel panel-default">
-          <!-- Panel heading (aka title) -->
-          <div class="panel-heading">
-            <div>
-              <label><b>Interventions</b></label>
-            </div>
-          </div>
+	<!-- Storing of data to be used for later when submitting -->
+	<div id="store">
+			<p id="userid">{{ userid }}</p>
+			<p id="pid">{{ pid }}</p>
+			<p id="id">{{ id }}</p>
+			<p id="ann_type">{{ ann_type }}</p>
+			<p id="outcome_save"> {{ outcome }} </p>
+			<p id="comparator_save"> {{ comparator }} </p>
+			<p id="intervention_save"> {{ intervention }} </p>
+			<p id="xml_file"> {{ xml_file }} </p>
+	</div>
 
-          <!-- Scrollable window where selected-text is displayed -->
-          <div class="panel-body" id="panel-i" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
-              <div id="selected-i" class="selected-spans"> </div>
-          </div>
-        </div>
-      </div>
-
-      <div class = "col-md-4">
-        <div class="panel panel-default">
-          <!-- Panel heading (aka title) -->
-          <div class="panel-heading">
-            <div>
-              <label><b>Outcomes</b></label>
-            </div>
-          </div>
-
-          <!-- Scrollable window where selected-text is displayed -->
-          <div class="panel-body" id="panel-o" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
-              <div id="selected-o" class="selected-spans"> </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="row">
-      <div class = "col-md-1"></div>
-      <div class = "col-md-10">
-        <div class="panel panel-default">
-          <!-- Panel heading (aka title) -->
-          <div class="panel-heading">
-            <div>
-              <label><b>Evidence</b></label>
-            </div>
-          </div>
-
-          <!-- Scrollable window where selected-text is displayed -->
-          <div class="panel-body" id="panel-ev" style = "height: 150px; max-height: 150px; overflow-y:scroll;">
-              <div id="selected-ev" class="selected-spans"> </div>
-          </div>
-        </div>
-      </div>
-      <div class = "col-md-1"></div>
-    </div>
-
-
-    </div>
-
-    <!-- Storing of data to be used for later when submitting -->
-    <div id="store">
-        <p id="userid">{{ userid }}</p>
-        <p id="pid">{{ pid }}</p>
-        <p id="id">{{ id }}</p>
-        <p id="outcome_save"> {{ outcome }} </p>
-        <p id="comparator_save"> {{ comparator }} </p>
-        <p id="intervention_save"> {{ intervention }} </p>
-        <p id="xml_file"> {{ xml_file }} </p>
-    </div>
-
-    <!-- Modal -->
-    <div id="myModal" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
-      <div class="modal-dialog">
-
-        <!-- Modal content-->
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h5> <b> Please explain your reasoning below: </b> </h5>
-          </div>
-          <div class="modal-body">
-            <textarea id = "response" class = "invalid_prompt_text"> </textarea>
-          </div>
-          <div class="modal-footer">
-            <button id = "invalid-submit-but" type="button" class="btn btn-success" disabled> Submit </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
 </body>
 </html>

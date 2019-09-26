@@ -4,6 +4,7 @@ import os
 import random
 import sqlite3
 import xml.etree.ElementTree as ET
+import json
 from get_file_description import get_file_description
 from data.by_row_description import by_row_description
 import numpy as np
@@ -102,6 +103,59 @@ class SQLiteReader(Reader):
         self.current_pos += 1
         return art
 
+class JSONReader(Reader):
+
+  def __init__(self, path):
+    self.path = path
+    self.id_list_file = './data/all_docs.txt'
+
+  def get_id_article(self, _id):
+    fname = '{}/{}.json'.format(self.path, _id)
+
+    cur_i = 0
+    raw_text = ''
+
+    def get_wrapped_string(s, extra_wrapper = None):
+      nonlocal cur_i
+      nonlocal raw_text
+      raw_text += s
+      i = cur_i
+      f = cur_i + len(s)
+      cur_i = f
+      new_s = '<offsets txt_i="{}" txt_f="{}" xml_i="{}" xml_f="{}">{}</offsets>'.format( \
+          i, f, i, f, s)
+      if extra_wrapper:
+        new_s = '<{}>{}</{}>'.format(extra_wrapper, new_s, extra_wrapper)
+      return new_s
+
+    def wrap_strings(node):
+      node[0] = {
+        'text': node[0],
+        'html': get_wrapped_string(node[0])
+      }
+      if type(node[1]) == str:
+        node[1] = get_wrapped_string(node[1], 'p')
+      else:
+        for sub_i, sub_node in enumerate(node[1]):
+          if type(sub_node) == str:
+            node[1][sub_i] = get_wrapped_string(sub_node, 'p')
+          elif type(sub_node) == list:
+            wrap_strings(sub_node)
+
+    content = json.load(open(fname))
+    for sec in content['sections']:
+      wrap_strings(sec)
+
+    art = article.Article(_id, content['title'], content['sections'])
+    art.annotations = content['annotations']
+    art.raw_text = raw_text
+    return art
+
+  def get_next_article(self, user = None, _id = None):
+    if _id == None:
+      ids = open(self.id_list_file).read().split('\n')
+      _id = ids[0]
+    return self.get_id_article(ids[0])
 
 class XMLReader(Reader):
     """Read from XML files.
@@ -289,7 +343,8 @@ def get_reader(reader):
     options = {
         'csv': CSVReader,
         'sql': SQLiteReader,
-        'xml': XMLReader
+        'xml': XMLReader,
+        'json': JSONReader,
     }
     if reader in options:
         return options[reader]
