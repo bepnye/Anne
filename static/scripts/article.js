@@ -1031,16 +1031,16 @@ function addPopover(node) {
   reject.innerHTML = '&times;';
 
   var pop = document.createElement('div');
-  pop.appendChild(accept);
   pop.appendChild(reject);
+  pop.appendChild(accept);
 
   $(node).popover({
     trigger: 'manual',
     template: template,
     offset: '0, 0',
-    placement: 'top',
+    placement: 'right',
     content: pop,
-    delay: { 'show': 0, 'hide': 350 },
+    delay: { 'show': 0, 'hide': 400 },
     html: true,
     sanitize: false,
   });

@@ -258,6 +258,19 @@ class XMLReader(Reader):
             
             
         return art
+
+    def get_id_article(self, pmcid):
+        path_to_file =  self.path + '/' + str(pmcid) + '.html' # the path to XML files
+        et = ET.parse(path_to_file) 
+        root = et.getroot() 
+        
+        front = root.find('front')
+        article_meta = front.find('article-meta')
+        body = root.find('body')
+
+        art = self._init_article_(pmcid, article_meta, body)
+        return art
+      
     
     """
     Grabs a random XML article and displays it.
@@ -269,16 +282,7 @@ class XMLReader(Reader):
         next_file = next_file or self._get_next_file(user)
         if not next_file:
           return None
-
-        path_to_file =  self.path + '/' + str(next_file) + '.html' # the path to XML files
-        et = ET.parse(path_to_file) 
-        root = et.getroot() 
-        
-        front = root.find('front')
-        article_meta = front.find('article-meta')
-        body = root.find('body')
-
-        art = self._init_article_(next_file, article_meta, body)
+        art = self.get_id_article(next_file)
         return art
         
 
