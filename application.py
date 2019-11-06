@@ -10,8 +10,6 @@ import writer
 import numpy as np
 import pandas as pd
 
-import model_utils
-
 application = flask.Flask(__name__)
 
 anne = annotator.Annotator(reader.get_reader(config.reader)(**config.reader_params),
