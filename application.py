@@ -135,25 +135,25 @@ def annotate_article(userid, id_, ann_type):
 """
 Grabs a specified article and displays the full text.
 """                             
-@application.route('/browse/<userid>/<id_>/', methods=['GET'])
-def browse(userid, id_ = None):
-    if id_ is None:
-        art = anne.get_next_article(userid)
-    else:
-        art = anne.get_next_article(userid, id_)
-    
-    if not art:
-        return flask.redirect(flask.url_for('finish'))
-    else:
-        annos = model_annotations['docs'][id_]
-        return flask.render_template('browse_article.html',
-                                     userid = userid,
-                                     id = art.id_,
-                                     pid = id_,
-                                     tabs = art.text,
-                                     spans = annos,
-                                     xml_file = get_last_path(userid),
-                                     options = config.options_full)
+@application.route('/browse/', methods=['GET'])
+def browse_start():
+  art = anne.get_next_article(None, None)
+  return flask.render_template('browse_article.html',
+                               id = art.id_,
+                               tabs = art.text,
+                               text = art.raw_text,
+                               anns = art.annotations,
+                               options = config.options_full)
+
+@application.route('/browse/<id_>/', methods=['GET'])
+def browse(id_ = None):
+    art = anne.get_next_file(None, id_)
+    return flask.render_template('browse_article.html',
+                                 id = art.id_,
+                                 tabs = art.text,
+                                 text = art.raw_text,
+                                 anns = art.annotations,
+                                 options = config.options_full)
 
 @application.route('/instructions/')
 def instructions():

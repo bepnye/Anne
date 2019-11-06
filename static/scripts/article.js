@@ -12,6 +12,7 @@ function bindEvents() {
   $("#del-span").click(() => { removeSpan(); });
 
   $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+    setArticleHeight();
     var tabIdChunks = e.target.id.split('-');
     var navId = e.target.parentNode.id;
     $('input[name="spans"]').attr('checked', false);
@@ -30,9 +31,7 @@ function bindEvents() {
       }
 
     // Toggle the group tab
-    } else if (navId == 'nav-tabs-i' ||
-               navId == 'nav-tabs-c' ||
-               navId == 'nav-tabs-o') {
+    } else if (e.target.classList.contains('group-tab')) {
       $('input[name=spans]').attr('checked',false);
       _curGroup = tabIdChunks[tabIdChunks.length - 1];
     }
@@ -116,7 +115,7 @@ function delGroup() {
   setArticleHeight();
 }
 
-function createGroup(groupName) {
+function createGroup(groupName, displayGroup = true) {
   if (groupName == null) {
     groupName = prompt("Enter group name:", "...");
     if (groupName == null) {
@@ -158,8 +157,10 @@ function createGroup(groupName) {
 
   setTabIndices();
 
-  showGroup(e, tabIdx);
-  setArticleHeight();
+  _curGroup = groupIdx; // Can't wait for the .shown event to trigger asynchronously! 
+  if (displayGroup) {
+    showGroup(e, tabIdx);
+  }
 }
 
 function showAnnTab(e) {
@@ -272,10 +273,10 @@ function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, hlTypes, spanI
   var labeledNodes = selectedNodes.filter(
       n => n.parentNode.classList.contains('highlight') ||
       n.parentNode.parentNode.classList.contains('highlight'));
-  if (labeledNodes.length > 0) {
-    alert('Cannot overwrite existing highlight!');
-    return false;
-  }
+  //if (labeledNodes.length > 0) {
+  //  alert('Cannot overwrite existing highlight!');
+  //  return false;
+  //}
 
   var textNodes = selectedNodes.filter(n => n.nodeType == Node.TEXT_NODE);
 	$.each(textNodes, function (n, node) {
@@ -346,7 +347,7 @@ function checkSpanOffset(node, targetOffset) {
   }
 }
 
-function addFromOffsets(startOffset, endOffset, text, hlTypes) {
+function addFromOffsets(startOffset, endOffset, text, hlTypes, x) {
   var startNode = null;
   var endNode = null;
   $.each(document.getElementsByTagName('offsets'), function(n, node) {
@@ -366,12 +367,28 @@ function addFromOffsets(startOffset, endOffset, text, hlTypes) {
     startNode = startNode.firstChild;
     endNode = endNode.firstChild;
     var selectedNodes = getInterveningNodes(startNode, endNode);
-    add(selectedNodes, startOffset, endOffset, text, hlTypes);
+    add(selectedNodes, startOffset, endOffset, text, hlTypes, x);
   } else {
     console.log('Unable to find start/end nodes to highlight text');
     console.log(textStartOffset, textEndOffset);
   }
 };
+
+function addAnnsFromOffsets(anns, rawText) {
+  anns.forEach(ann => {
+    _curE = ann.group;
+    ann.labels.forEach(l => {
+      createGroup(l.name, false);
+      l.spans.forEach(s => {
+        var i = s[0];
+        var f = s[1];
+        var x = s[2];
+        var txt = rawText.slice(i, f);
+        addFromOffsets(i, f, txt, _curE, x);
+      });
+    });
+  });
+}
 
 function addFromHighlight() {
   var [highlighted, range] = get_Highlight_Text_And_Range();
@@ -466,10 +483,15 @@ async function radioChange(e) {
 /**
 * Add the text to the on-going list.
 */
-function add(selectedNodes, startOffset, endOffset, highlighted, eType) {
+function add(selectedNodes, startOffset, endOffset, highlighted, eType, scalarData) {
   
   var globalId = getNewGlobalId();
   textNodes = wrapNodeTexts(selectedNodes, startOffset, endOffset, ['highlight-'+eType], globalId);
+  if (scalarData) {
+    textNodes.forEach(n => {
+      n.setAttribute('scalarData', scalarData);
+    });
+  }
   if (textNodes) {
     var startNode = textNodes[0];
     var endNode = textNodes[textNodes.length - 1];
@@ -499,7 +521,8 @@ function addRadioButton(text, suffix, txtStart, txtEnd, globalId) {
     radioDiv.setAttribute('element', _curE);
     radioDiv.setAttribute('group', _curGroup);
 
-    var tab = $('.tab-pane-article.active')[0].id;
+    var sourceSpan = $('.span-'+globalId)[0];
+    var tab = findAncestor(sourceSpan, 'tab-pane-article').id;
     var radioInput = document.createElement('input');
     radioInput.setAttribute('type', 'radio');
     radioInput.setAttribute('tab', tab);
@@ -940,18 +963,22 @@ function addTabContent(div, heading, content, level = 0) {
   var titleDiv = document.createElement('h'+(level+3));
   titleDiv.innerHTML = heading.html;
   div.appendChild(titleDiv);
-  $.each(content, function(i, contentNode) {
-    /* contentNode is either:
-         1) <p>...</p>
-         2) [secTitle, [<p>...</p>, ...]] */
-    if (typeof contentNode == 'string') {
-      div.innerHTML += contentNode;
-    } else if (typeof contentNode == 'object') {
-      addTabContent(div, contentNode[0], contentNode[1], level + 1);
-    } else {
-      console.log('Unable parse tabContent for adding to div:\n', contentNode);
-    }
-  });
+  if (typeof content == 'string') {
+    div.innerHTML += content;
+  } else {
+    $.each(content, function(i, contentNode) {
+      /* contentNode is either:
+           1) <p>...</p>
+           2) [secTitle, [<p>...</p>, ...]] */
+      if (typeof contentNode == 'string') {
+        div.innerHTML += contentNode;
+      } else if (typeof contentNode == 'object') {
+        addTabContent(div, contentNode[0], contentNode[1], level + 1);
+      } else {
+        console.log('Unable parse tabContent for adding to div:\n', contentNode);
+      }
+    });
+  }
   return;
 };
 
