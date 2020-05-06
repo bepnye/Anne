@@ -273,10 +273,10 @@ function wrapNodeTexts(selectedNodes, selectedTxtI, selectedTxtF, hlTypes, spanI
   var labeledNodes = selectedNodes.filter(
       n => n.parentNode.classList.contains('highlight') ||
       n.parentNode.parentNode.classList.contains('highlight'));
-  //if (labeledNodes.length > 0) {
-  //  alert('Cannot overwrite existing highlight!');
-  //  return false;
-  //}
+  if (labeledNodes.length > 0) {
+    alert('Cannot create nested highlight! Please assign or delete the selected highlight.');
+    return false;
+  }
 
   var textNodes = selectedNodes.filter(n => n.nodeType == Node.TEXT_NODE);
 	$.each(textNodes, function (n, node) {

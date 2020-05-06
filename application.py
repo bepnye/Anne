@@ -1,6 +1,7 @@
 import flask
 import json
 import re
+import glob
 from collections import defaultdict
 
 import annotator
@@ -17,7 +18,7 @@ anne = annotator.Annotator(reader.get_reader(config.reader)(**config.reader_para
 													 writer.get_writer(config.writer)(**config.writer_params))
 
 valid_users = np.loadtxt('usernames.txt', delimiter = ',', dtype = 'str')
-all_anns = pd.read_csv('data/exhaustive_ico.csv')
+all_anns = pd.read_csv('data/exhaustive_ico_fixed.csv')
 
 def collect_html(a):
 	html = []
@@ -77,6 +78,31 @@ def fix_exhaustive_offsets():
 					all_anns.loc[i, 'xml_offsets'] = '{}:{}'.format(reason_i, reason_f)
 					break
 
+def get_user_worklist(user):
+  all_pmids = set(map(str, all_anns.RowID))
+  print('Found ICO data for {} pmids. Generating worklist for {}'.format(len(all_pmids), user))
+  done_pmids = { f.split('/')[-1].split('_')[1] for f in glob.glob('all_outputs/{}_*_coref.json'.format(user)) }
+  print('\t{} docs done'.format(len(done_pmids)))
+  todo_pmids = []
+  bad_pmids = []
+  for pmid in all_pmids:
+    art = anne.reader.get_id_article('PMC'+pmid)
+    icos = get_ico_anns(art, 'PMC'+pmid)
+    if len(icos) == 0:
+      bad_pmids.append(pmid)
+    else:
+      if pmid not in done_pmids:
+        todo_pmids.append(pmid)
+  print('\t{} docs todo'.format(len(todo_pmids)))
+  print('\t{} docs bad (no frames)'.format(len(bad_pmids)))
+  return todo_pmids
+
+def write_user_worklist(user):
+  todo_pmids = get_user_worklist(user)
+  with open('data/order_{}.txt'.format(user), 'w') as fout:
+    fout.write('\n'.join(['PMC'+p for p in todo_pmids]))
+  with open('data/{}.progress'.format(user), 'w') as fout:
+    fout.write('0')
 
 """
 Display the main page.
@@ -130,7 +156,7 @@ def get_abst_end(art):
 	xml_i, xml_f = extract_xml_offsets(abst_end)[-1]
 	return xml_f
 
-def get_ico_anns(art, id_, abst_only = False):
+def get_ico_anns(art, id_, abst_only = True):
 	id_anns = all_anns[all_anns.RowID == int(id_.replace('PMC', ''))]
 	if abst_only:
 		abst_f = get_abst_end(art)
