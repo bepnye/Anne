@@ -1,56 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Medical Annotation</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='imgs/icon.jpg') }}">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="-1">
-    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+		<title>Medical Annotation</title>
+		<meta http-equiv="Pragma" content="no-cache">
+		<meta http-equiv="Expires" content="-1">
+		<meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="{{ url_for('static', filename='scripts/post.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/article.js') }}"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+		<script src="{{ url_for('static', filename='scripts/post.js') }}"></script>
+		<script src="{{ url_for('static', filename='scripts/article.js') }}"></script>
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/bootstrap.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/main.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/bootstrap.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/main.css') }}">
 
-  <script>
-    /**
-    * Displays the information in the tab when clicked on.
-    *
-    * @param evt represents what happend with the tab.
-    * @param name represents which tab to open.
-    */
-    $(document).ready( function() {
-      var tabs = {{ tabs|tojson }};
-      console.log(tabs);
-      $.each(tabs, function(nTab, tab) {
-        var title = tab[0];
-        var content = tab[1];
-        var div = document.getElementById('nav-'+nTab);
-        addTabContent(div, title, content);
-      });
+	<script>
+		/**
+		* Displays the information in the tab when clicked on.
+		*
+		* @param evt represents what happend with the tab.
+		* @param name represents which tab to open.
+		*/
+		$(document).ready( function() {
+			var tabs = {{ tabs|tojson }};
+			console.log(tabs);
+			$.each(tabs, function(nTab, tab) {
+				var title = tab[0];
+				var content = tab[1];
+				var div = document.getElementById('nav-'+nTab);
+				addTabContent(div, title, content);
+			});
 
-      var anns = {{ annotations|safe }};
-      console.log(anns);
-      addAnns(anns);
+			var anns = {{ annotations|safe }};
+			console.log(anns);
+			addAnns(anns);
 
-      bindEvents();
+			bindEvents();
 
-      $('#nav-tab-0').tab('show')
-      showAnnTab('i');
+			$('#nav-tab-0').tab('show')
+			showAnnTab('i');
 
-      setArticleHeight();
-      $(window).resize(function() {
-        clearTimeout(window.resizedFinished);
-        window.resizedFinished = setTimeout(function(){
-          setArticleHeight();
-        }, 250);
-      });
-    });
-  </script>
+			setArticleHeight();
+			$(window).resize(function() {
+				clearTimeout(window.resizedFinished);
+				window.resizedFinished = setTimeout(function(){
+					setArticleHeight();
+				}, 250);
+			});
+		});
+	</script>
 
 </head>
 <body>
@@ -70,7 +69,7 @@
 					<div id='nav-{{ key }}' class="tab-pane fade tab-pane-article" role="tabpanel">
 					</div>
 				{% endfor %}
-          <div id='nav-anns' class="tab-pane fade tab-pane-article" role="tabpanel">
+					<div id='nav-anns' class="tab-pane fade tab-pane-article" role="tabpanel">
 			</div>
 		</div>
 
@@ -80,38 +79,38 @@
 					<!--<a style="height: 42px; border: 1px solid white;">-->
 					<a class="nav-link-left nav-link" id="nav-tab-i" data-toggle="tab" href="#nav-i"><span class="hotkey">T</span>reatments</a>
 					<a class="nav-link-left nav-link" id="nav-tab-o" data-toggle="tab" href="#nav-o"><span class="hotkey">O</span>utcomes</a>
-          <button type="button" id="add-group" class="btn btn-primary btn-group" style="margin-top: 5px;">
-            <div style="width: 100%;">Add&nbsp;<span class="hotkey">G</span>roup</div>
-          </button>
-          <button type="button" id="add-span" class="btn btn-primary btn-group">
-            <div style="width: 100%;">Add&nbsp;<span class="hotkey">S</span>pan</div>
-          </button>
-          <button type="button" id="del-group" class="btn btn-primary btn-group">
-            <div style="width: 100%;"><span class="hotkey">D</span>el Group</div>
-          </button>
-          <button type="button" id="del-span" class="btn btn-primary btn-group">
-            <div style="width: 100%;">D<span class="hotkey">e</span>l Span</div>
-          </button>
-          <a style="flex: 1;"></a>
-          <button type="button" id="submit" class="btn btn-success btn-group" disabled>
-            <div style="width: 100%;">Submit</div>
-          </button>
+					<button type="button" id="add-group" class="btn btn-primary btn-group" style="margin-top: 5px;">
+						<div style="width: 100%;">Add&nbsp;<span class="hotkey">G</span>roup</div>
+					</button>
+					<button type="button" id="add-span" class="btn btn-primary btn-group">
+						<div style="width: 100%;">Add&nbsp;<span class="hotkey">S</span>pan</div>
+					</button>
+					<button type="button" id="del-group" class="btn btn-primary btn-group">
+						<div style="width: 100%;"><span class="hotkey">D</span>el Group</div>
+					</button>
+					<button type="button" id="del-span" class="btn btn-primary btn-group">
+						<div style="width: 100%;">D<span class="hotkey">e</span>l Span</div>
+					</button>
+					<a style="flex: 1;"></a>
+					<button type="button" id="submit" class="btn btn-success btn-group" disabled>
+						<div style="width: 100%;">Submit</div>
+					</button>
 				</nav>
 
 				<div class="tab-content tab-content-ico" id="tab-contents-ico">
 
-          {% for e in 'io' %}
-          <div id="nav-{{ e }}" class="tab-pane fade" role="tabpanel">
-            <nav class="nav nav-tabs nav-groups" id="nav-tabs-{{ e }}" role="tablist">
-            </nav>
+					{% for e in 'io' %}
+					<div id="nav-{{ e }}" class="tab-pane fade" role="tabpanel">
+						<nav class="nav nav-tabs nav-groups" id="nav-tabs-{{ e }}" role="tablist">
+						</nav>
 
-            <div class="tab-content tab-content-group" id="tab-contents-{{ e }}">
-            </div>
-          </div>
-          {% endfor %}
+						<div class="tab-content tab-content-group" id="tab-contents-{{ e }}">
+						</div>
+					</div>
+					{% endfor %}
 
 				</div>
-      </div>
+			</div>
 	</div>
 
 	<!-- Storing of data to be used for later when submitting -->
