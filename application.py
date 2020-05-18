@@ -18,7 +18,7 @@ anne = annotator.Annotator(reader.get_reader(config.reader)(**config.reader_para
 													 writer.get_writer(config.writer)(**config.writer_params))
 
 valid_users = np.loadtxt('usernames.txt', delimiter = ',', dtype = 'str')
-all_anns = pd.read_csv('data/exhaustive_ico_fixed.csv')
+all_anns = pd.read_csv('data/exhaustive_ico.csv')
 
 def collect_html(a):
 	html = []
@@ -291,4 +291,4 @@ Run the application.
 """
 if __name__ == '__main__':
 	 #application.run()
-	 application.run(host = '0.0.0.0', port = 8001, debug = True) 
+	 application.run(host = '0.0.0.0', port = 8000, debug = True) 
